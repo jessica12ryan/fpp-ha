@@ -1,0 +1,59 @@
+name: Update FPP-HA Metadata
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'fpp-ha/config.yaml'
+
+jobs:
+  update-metadata:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches full history for rebasing
+
+      - name: Extract Metadata and Update Files
+        run: |
+          # Extract version from config.yaml
+          VERSION=$(grep '^version:' fpp-ha/config.yaml | head -1 | awk '{print $2}' | tr -d '"')
+          DATE=$(date +'%d-%m-%Y')
+          REPO="${{ github.repository }}"
+          
+          # 1. Create updater.json
+          cat <<EOF > fpp-ha/updater.json
+          {
+            "github_beta": "false",
+            "last_update": "$DATE",
+            "repository": "$REPO",
+            "slug": "fpp-ha",
+            "source": "github",
+            "upstream_repo": "falconchristmas/fpp",
+            "upstream_version": "$VERSION"
+          }
+          EOF
+
+          # 2. Update CHANGELOG.md (Prepends newest version to the top)
+          if ! grep -q "## $VERSION" fpp-ha/CHANGELOG.md; then
+            TEMP_CHANGELOG=$(mktemp)
+            echo -e "## $VERSION ($DATE)\n\n- Updated app to version $VERSION\n\n$(cat fpp-ha/CHANGELOG.md)" > "$TEMP_CHANGELOG"
+            mv "$TEMP_CHANGELOG" fpp-ha/CHANGELOG.md
+          fi
+
+      - name: Sync with Remote
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Autostash hides your new files, pulls changes, then puts files back
+          git pull origin main --rebase --autostash
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update updater.json and CHANGELOG"
+          file_pattern: 'fpp-ha/updater.json fpp-ha/CHANGELOG.md'
