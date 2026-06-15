@@ -1,0 +1,35 @@
+name: "FPP - Falcon Player"
+description: "Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player"
+version: "master"
+slug: "fpp-ha"
+url: "https://github.com/jessica12ryan/fpp-ha"
+
+arch:
+  - amd64
+  - aarch64
+  - armhf
+  
+startup: "services"
+boot: "auto"
+
+hostname: "fpp-docker"
+host_network: true
+host_ipc: true
+
+full_access: true
+
+webui: "http://[HOST]:[PORT:80]"
+panel_icon: mdi:led-strip-variant
+
+map:
+  - type: data
+    read_only: false
+    path: /home/fpp/media
+  - type: addon_config
+    read_only: false
+
+ports:
+  80/tcp: 80 # Web UI
+  4048/udp: 4048 # DDP
+  5568/udp: 5568 # sACN/E1.31
+  32320/udp: 32320 # FPP MultiSync
