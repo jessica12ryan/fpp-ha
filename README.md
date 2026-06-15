@@ -10,8 +10,8 @@ If you want to do add the repository manually, please follow the procedure highl
 
 &#10003; ![image](https://api.iconify.design/mdi/file-search.svg) [FPP - Falcon Player](app-fpp/) : Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player
 
-&emsp;&emsp;![Version](https://img.shields.io/badge/dynamic/yaml?label=Version&query=%24.upstream_version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Fapp-fpp%2Fupdater.json)
-![Update](https://img.shields.io/badge/dynamic/json?label=Updated&query=%24.last_update&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Fapp-fpp%2Fupdater.json)
+&emsp;&emsp;![Version](https://img.shields.io/badge/dynamic/yaml?label=Version&query=%24.upstream_version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
+![Update](https://img.shields.io/badge/dynamic/json?label=Updated&query=%24.last_update&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
 ![aarch64][aarch64-badge]
 ![amd64][amd64-badge]
 
