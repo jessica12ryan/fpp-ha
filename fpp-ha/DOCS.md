@@ -1,19 +1,25 @@
 # FPP - Falcon Player App for Home Assistant
+&emsp;&emsp;![Version](https://img.shields.io/badge/dynamic/yaml?label=Version&query=%24.upstream_version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
+![Update](https://img.shields.io/badge/dynamic/json?label=Updated&query=%24.last_update&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
+![aarch64][aarch64-badge]
+![amd64][amd64-badge]
 
-[![FPP logo](https://raw.githubusercontent.com/jessica12ryan/homesync-ha-apps/master/app-fpp/logo.png)](https://github.com/FalconChristmas/fpp/)
-
-## Repository Instructions:
-[![Add repository to Home Assistant][repository-badge]][repository-url]
-
-Or simply add this github repo `https://github.com/jessica12ryan/homesync-ha-apps` as a third-party app repository in Home Assistant **App Store**.
+[![FPP logo](https://raw.githubusercontent.com/jessica12ryan/fpp-ha/master/fpp-ha/logo.png)](https://github.com/FalconChristmas/fpp/)
 
 ## Requirements:
 - Home Assistant Operating System
 - Atleast 1GB free space (minimum), 16GB recommended
 
-## Installation:
-Install and start the app.
-You can open FPP by browsing to http://HA_IP
+## Getting Started
+
+[![Add repository to Home Assistant][repository-badge]][repository-url]
+
+If you want to add the repository manually, please follow the procedure highlighted in the [Home Assistant website](https://home-assistant.io/hassio/installing_third_party_addons). Use the following URL to add this repository: https://github.com/jessica12ryan/fpp-ha
+
+## Installation
+
+- After clicking install, it may take several minutes to download, compile, and install FPP. If you refresh or browse to another page, the app will continue downloading. The app page will appear in your app list when the app has been successfully installed.
+- You can open FPP by browsing to http://HA_IP or clicking the Open Web UI button.
 
 ## Troubleshooting:
 - [FPP App Repo](https://github.com/jessica12ryan/homesync-ha-apps)
@@ -27,5 +33,9 @@ You can open FPP by browsing to http://HA_IP
 - [dkulp](https://github.com/dkulp) for FPP Docker Image
 - [jessica12ryan](https://github.com/jessica12ryan/homesync-ha-apps) for HomeSync Apps
 
+
+[aarch64no-badge]: https://img.shields.io/badge/aarch64-no-red.svg
+[aarch64-badge]: https://img.shields.io/badge/aarch64-yes-green.svg
+[amd64-badge]: https://img.shields.io/badge/amd64-yes-green.svg
 [repository-badge]: https://img.shields.io/badge/Add%20repository%20to%20my-Home%20Assistant-41BDF5?logo=home-assistant&style=for-the-badge
-[repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fjessica12ryan%2Fhomesync-ha-apps
+[repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fjessica12ryan%2Ffpp-ha
