@@ -13,12 +13,10 @@
 
 #include <tunables/global>
 
-profile fpp-ha flags=(attach_disconnected, complain) {
+profile 006621e4_fpp-ha flags=(attach_disconnected, complain) {
   #include <abstractions/base>
   #include <abstractions/nameservice>
   #include <abstractions/ssl_keys>
-  #include <abstractions/php-fpm>
-  #include <abstractions/apache2>
 
   # ------------------------------------------------------------------
   # Capabilities
@@ -45,12 +43,12 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   capability mknod,
   capability audit_write,
   capability lease,
-  capability linux_immutable,
+  capability sys_resource,
+  capability sys_time,
 
   # ------------------------------------------------------------------
   # Network access
   # ------------------------------------------------------------------
-  # Full host networking — bind any port, send/receive any protocol
   network inet dgram,
   network inet stream,
   network inet6 dgram,
@@ -65,7 +63,7 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   # Root filesystem (read-only)
   # ------------------------------------------------------------------
   /                               r,
-  /**                              kr,
+  /**                             r,
 
   # ------------------------------------------------------------------
   # FPP installation
@@ -78,7 +76,7 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   # FPP media / data (persistent)
   # ------------------------------------------------------------------
   /home/fpp/**                    rw,
-  /home/fpp/media/**              rwk,
+  /home/fpp/media/**              rw,
   /home/fpp/media/logs/**         rw,
 
   # ------------------------------------------------------------------
@@ -119,7 +117,7 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   # Web server (Apache + PHP-FPM)
   # ------------------------------------------------------------------
   /usr/sbin/apache2               rix,
-  /usr/sbin/php-fpm*             rix,
+  /usr/sbin/php-fpm*              rix,
   /run/php/**                     rw,
   /run/apache2/**                 rw,
   /var/log/apache2/**             rw,
@@ -176,10 +174,9 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   /dev/seq*                       rw,
   /dev/sndstat                    r,
 
-  # PipeWire / PulseAudio
   /run/pipewire-0/**              rw,
   /run/user/**/pipewire-0/**      rw,
-  /run/user/**/pulse/**          rw,
+  /run/user/**/pulse/**           rw,
   /dev/shm/pipewire*              rw,
 
   # ------------------------------------------------------------------
@@ -270,5 +267,5 @@ profile fpp-ha flags=(attach_disconnected, complain) {
   # Signal / ptrace
   # ------------------------------------------------------------------
   signal,
-  ptrace (read, trace, traceby),
+  ptrace,
 }
