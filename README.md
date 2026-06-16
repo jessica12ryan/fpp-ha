@@ -1,10 +1,18 @@
 # FPP - Falcon Player App for Home Assistant
+> **Home Assistant App for [Falcon Player (FPP)](https://github.com/FalconChristmas/fpp)**
+
 &emsp;&emsp;![Version](https://img.shields.io/badge/dynamic/yaml?label=Version&query=%24.upstream_version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
 ![Update](https://img.shields.io/badge/dynamic/json?label=Updated&query=%24.last_update&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
 ![aarch64][aarch64-badge]
 ![amd64][amd64-badge]
 
 [![FPP logo](https://raw.githubusercontent.com/jessica12ryan/fpp-ha/master/fpp-ha/logo.png)](https://github.com/FalconChristmas/fpp/)
+
+FPP-HA currently uses the master branch of FPP which contains the unstable version of FPP 10. Once FPP 10 is released, we will switch to stable builds.
+
+FPP-HA is not officially supported by the FalconChristmas/FPP team. All issues from this installation should be logged to THIS repo. We will test and confirm whether the issue is isolated to our repo, and recreate the ticket on the FPP repo if necessary. The FPP team will not respond to any issues from this installation.
+
+---
 
 ## Getting Started
 
