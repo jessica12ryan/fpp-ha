@@ -1,0 +1,274 @@
+# ------------------------------------------------------------------
+# AppArmor profile for FPP - Falcon Player Home Assistant App
+# ------------------------------------------------------------------
+# This profile is designed to confine the FPP app container
+# while allowing the full range of operations FPP requires:
+#   - Audio (ALSA, PipeWire, PulseAudio)
+#   - USB device access (FPP Cape, pixel controllers)
+#   - GPIO / I2C / SPI (Raspberry Pi & other SBCs)
+#   - Network (UDP for DDP/sACN/E1.31, TCP for Web UI)
+#   - Filesystem (media, config, logs)
+#   - System services (avahi, dnsmasq, hostapd, mosquitto, samba)
+# ------------------------------------------------------------------
+
+#include <tunables/global>
+
+profile fpp-ha flags=(attach_disconnected, complain) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  #include <abstractions/ssl_keys>
+  #include <abstractions/php-fpm>
+  #include <abstractions/apache2>
+
+  # ------------------------------------------------------------------
+  # Capabilities
+  # ------------------------------------------------------------------
+  capability chown,
+  capability dac_override,
+  capability dac_read_search,
+  capability fowner,
+  capability fsetid,
+  capability kill,
+  capability net_admin,
+  capability net_bind_service,
+  capability net_raw,
+  capability setgid,
+  capability setuid,
+  capability sys_admin,
+  capability sys_chroot,
+  capability sys_nice,
+  capability sys_ptrace,
+  capability sys_rawio,
+  capability sys_tty_config,
+  capability ipc_lock,
+  capability ipc_owner,
+  capability mknod,
+  capability audit_write,
+  capability lease,
+  capability linux_immutable,
+
+  # ------------------------------------------------------------------
+  # Network access
+  # ------------------------------------------------------------------
+  # Full host networking — bind any port, send/receive any protocol
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+  network netlink raw,
+  network packet dgram,
+  network packet raw,
+  network unix dgram,
+  network unix stream,
+
+  # ------------------------------------------------------------------
+  # Root filesystem (read-only)
+  # ------------------------------------------------------------------
+  /                               r,
+  /**                              kr,
+
+  # ------------------------------------------------------------------
+  # FPP installation
+  # ------------------------------------------------------------------
+  /opt/fpp/**                     r,
+  /opt/fpp/www/**                 rw,
+  /opt/fpp/www/api/**             rw,
+
+  # ------------------------------------------------------------------
+  # FPP media / data (persistent)
+  # ------------------------------------------------------------------
+  /home/fpp/**                    rw,
+  /home/fpp/media/**              rwk,
+  /home/fpp/media/logs/**         rw,
+
+  # ------------------------------------------------------------------
+  # Home Assistant supervisor mount points
+  # ------------------------------------------------------------------
+  /data/**                        rw,
+  /backup/**                      rw,
+  /ssl/**                         r,
+  /config/**                      rw,
+
+  # ------------------------------------------------------------------
+  # System binaries & scripts
+  # ------------------------------------------------------------------
+  /bin/**                         rix,
+  /sbin/**                        rix,
+  /usr/bin/**                     rix,
+  /usr/sbin/**                    rix,
+  /usr/local/bin/**               rix,
+  /usr/local/sbin/**              rix,
+
+  # ------------------------------------------------------------------
+  # Libraries
+  # ------------------------------------------------------------------
+  /lib/**                         mr,
+  /usr/lib/**                     mr,
+  /usr/local/lib/**               mr,
+
+  # ------------------------------------------------------------------
+  # FPP specific executables
+  # ------------------------------------------------------------------
+  /opt/fpp/src/fppd               rix,
+  /opt/fpp/src/fppinit            rix,
+  /opt/fpp/scripts/fppd_start     rix,
+  /opt/fpp/bin/**                 rix,
+  /run.sh                         ix,
+
+  # ------------------------------------------------------------------
+  # Web server (Apache + PHP-FPM)
+  # ------------------------------------------------------------------
+  /usr/sbin/apache2               rix,
+  /usr/sbin/php-fpm*             rix,
+  /run/php/**                     rw,
+  /run/apache2/**                 rw,
+  /var/log/apache2/**             rw,
+  /var/www/**                     r,
+  /etc/apache2/**                 r,
+  /etc/php/**                     r,
+  /etc/ssl/**                     r,
+
+  # ------------------------------------------------------------------
+  # System services commonly used by FPP
+  # ------------------------------------------------------------------
+  /usr/sbin/avahi-daemon          rix,
+  /usr/sbin/dnsmasq               rix,
+  /usr/sbin/hostapd               rix,
+  /usr/sbin/mosquitto             rix,
+  /usr/sbin/vsftpd                rix,
+  /usr/sbin/smbd                  rix,
+  /usr/sbin/nmbd                  rix,
+  /usr/sbin/sshd                  rix,
+  /usr/sbin/rsyslogd              rix,
+  /usr/sbin/shellinaboxd          rix,
+  /usr/sbin/ntpd                  rix,
+  /usr/sbin/dhcp-helper           rix,
+
+  # ------------------------------------------------------------------
+  # Service configuration files
+  # ------------------------------------------------------------------
+  /etc/avahi/**                   r,
+  /etc/dnsmasq.conf               r,
+  /etc/hostapd/**                 r,
+  /etc/mosquitto/**               r,
+  /etc/samba/**                   r,
+  /etc/ssh/**                     r,
+  /etc/rsyslog.conf               r,
+  /etc/rsyslog.d/**               r,
+  /etc/ntpsec/**                  r,
+  /etc/default/**                 r,
+  /etc/exim4/**                   r,
+
+  # ------------------------------------------------------------------
+  # FPP configuration
+  # ------------------------------------------------------------------
+  /etc/fpp/**                     rw,
+  /etc/fpp/container              rw,
+  /etc/fpp/fpp_*                  rw,
+
+  # ------------------------------------------------------------------
+  # Audio devices & subsystems
+  # ------------------------------------------------------------------
+  /dev/snd/**                     rw,
+  /dev/audio*                     rw,
+  /dev/dsp*                       rw,
+  /dev/mixer*                     rw,
+  /dev/seq*                       rw,
+  /dev/sndstat                    r,
+
+  # PipeWire / PulseAudio
+  /run/pipewire-0/**              rw,
+  /run/user/**/pipewire-0/**      rw,
+  /run/user/**/pulse/**          rw,
+  /dev/shm/pipewire*              rw,
+
+  # ------------------------------------------------------------------
+  # USB devices (pixel controllers, FPP Cape, etc.)
+  # ------------------------------------------------------------------
+  /dev/bus/usb/**                 rw,
+  /dev/usb/**                     rw,
+  /dev/ttyUSB*                    rw,
+  /dev/ttyACM*                    rw,
+  /dev/input/**                   rw,
+
+  # ------------------------------------------------------------------
+  # GPIO / I2C / SPI
+  # ------------------------------------------------------------------
+  /dev/gpiochip*                  rw,
+  /dev/i2c-*                      rw,
+  /dev/spidev*                    rw,
+  /dev/mem                        rw,
+  /dev/gpiomem                    rw,
+  /sys/class/gpio/**              rw,
+  /sys/class/i2c/**               r,
+  /sys/class/spi_master/**        r,
+  /sys/devices/platform/**        r,
+  /sys/devices/virtual/**         r,
+
+  # ------------------------------------------------------------------
+  # Video / framebuffer
+  # ------------------------------------------------------------------
+  /dev/fb*                        rw,
+  /dev/dri/**                     rw,
+  /dev/vchiq                      rw,
+  /dev/video*                     rw,
+
+  # ------------------------------------------------------------------
+  # TTY / console
+  # ------------------------------------------------------------------
+  /dev/tty*                       rw,
+  /dev/pts/**                     rw,
+  /dev/console                    rw,
+
+  # ------------------------------------------------------------------
+  # Random / entropy
+  # ------------------------------------------------------------------
+  /dev/random                     r,
+  /dev/urandom                    r,
+
+  # ------------------------------------------------------------------
+  # Process / PID files
+  # ------------------------------------------------------------------
+  /run/**                         rw,
+  /var/run/**                     rw,
+  /var/lock/**                    rw,
+  /tmp/**                         rw,
+  /var/tmp/**                     rw,
+
+  # ------------------------------------------------------------------
+  # Logging
+  # ------------------------------------------------------------------
+  /var/log/**                     rw,
+  /var/log/fpp/**                 rw,
+
+  # ------------------------------------------------------------------
+  # Mail subsystem (exim4)
+  # ------------------------------------------------------------------
+  /usr/sbin/exim4                 rix,
+  /var/spool/exim4/**             rw,
+  /etc/exim4/**                   r,
+
+  # ------------------------------------------------------------------
+  # Proc / sys filesystem access (read-only)
+  # ------------------------------------------------------------------
+  /proc/**                        r,
+  /proc/sys/**                    r,
+  /proc/net/**                    r,
+  /sys/**                         r,
+  /sys/kernel/iommu_groups/**     r,
+  /sys/devices/**                 r,
+  /sys/class/**                   r,
+  /sys/fs/**                      r,
+
+  # ------------------------------------------------------------------
+  # Mount operations (for bind mount persistence)
+  # ------------------------------------------------------------------
+  mount options=(bind) /data/fpp-media/ -> /home/fpp/media/,
+  mount options=(rbind) /data/fpp-media/ -> /home/fpp/media/,
+
+  # ------------------------------------------------------------------
+  # Signal / ptrace
+  # ------------------------------------------------------------------
+  signal,
+  ptrace (read, trace, traceby),
+}
