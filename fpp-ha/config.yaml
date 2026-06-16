@@ -16,7 +16,30 @@ hostname: "fpp-docker"
 host_network: true
 host_ipc: true
 
-full_access: true
+apparmor: true
+
+privileged:
+  - SYS_ADMIN       # mount (bind mount persistence), GPIO
+  - SYS_RAWIO       # /dev/mem, GPIO, I2C, SPI
+  - SYS_NICE        # real-time priority for audio/light sequences
+  - SYS_PTRACE      # debugging / profiling
+  - SYS_CHROOT      # chroot operations
+  - SYS_TTY_CONFIG  # TTY device access
+  - SYSLOG          # system logging
+  - NET_ADMIN       # avahi, dnsmasq, hostapd, host_network
+  - NET_RAW         # raw sockets (DDP, sACN/E1.31)
+  - DAC_OVERRIDE    # bypass file permission checks
+  - IPC_LOCK        # lock memory for audio streaming
+  - KILL            # process management
+  - SETUID          # run services as different users
+  - SETGID          # run services as different groups
+  - MKNOD           # create device nodes
+  - CHOWN           # change file ownership
+  - FOWNER          # bypass file ownership checks
+  - AUDIT           # audit writes
+  - LEASE           # file leases (Samba)
+  - BLOCK_SUSPEND   # prevent sleep during shows
+  - WAKE_ALARM      # scheduled wake/sleep
 
 webui: "http://[HOST]:[PORT:80]"
 panel_icon: mdi:led-strip-variant
