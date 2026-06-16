@@ -1,6 +1,8 @@
 # FPP - Falcon Player App for Home Assistant
 > **Home Assistant App for [Falcon Player (FPP)](https://github.com/FalconChristmas/fpp)**
 
+**FPP-OS for PC's and Virtual Machines can be found at the [FPP-OS repo](https://github.com/jessica12ryan/fpp-os)**
+
 &emsp;&emsp;![Version](https://img.shields.io/badge/dynamic/yaml?label=Version&query=%24.upstream_version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
 ![Update](https://img.shields.io/badge/dynamic/json?label=Updated&query=%24.last_update&url=https%3A%2F%2Fraw.githubusercontent.com%2Fjessica12ryan%2Ffpp-ha%2Fmaster%2Ffpp-ha%2Fupdater.json)
 ![aarch64][aarch64-badge]
