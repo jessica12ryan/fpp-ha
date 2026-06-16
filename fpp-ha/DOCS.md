@@ -29,9 +29,8 @@ If you want to add the repository manually, please follow the procedure highligh
 - [xLights Zoom Room](https://xlightszoomroom.com)
 
 ## Credits:
-- [FalconChristmas](https://github.com/FalconChristmas/fpp) for Falcon Player
-- [dkulp](https://github.com/dkulp) for FPP Docker Image
-- [jessica12ryan](https://github.com/jessica12ryan/homesync-ha-apps) for HomeSync Apps
+- [FalconChristmas](https://github.com/FalconChristmas/fpp) for Falcon Player (FPP)
+- [jessica12ryan](https://github.com/jessica12ryan/fpp-ha) for FPP App for Home Assistant
 
 
 [aarch64no-badge]: https://img.shields.io/badge/aarch64-no-red.svg
