@@ -20,7 +20,15 @@ FPP-HA is not officially supported by the FalconChristmas/FPP team. All issues f
 
 [![Add repository to Home Assistant][repository-badge]][repository-url]
 
-If you want to add the repository manually, please follow the procedure highlighted in the [Home Assistant website](https://home-assistant.io/hassio/installing_third_party_addons). Use the following URL to add this repository: https://github.com/jessica12ryan/fpp-ha
+#### Manually add this repository to Home Assistant:
+ - Go to Settings > Apps in your Home Assistant instance.
+ - Click the Install app icon (bottom right).
+ - Click the three dots (⋮) in the top right corner and select Repositories.
+ - Click the Add icon (bottom right).
+ - Paste the following URL and click Add:
+```
+https://github.com/jessica12ryan/fpp-ha
+```
 
 ## Installation
 
