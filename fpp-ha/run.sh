@@ -2,7 +2,7 @@
 set -e
 
 # ============================================================
-# FPP - Falcon Player Home Assistant Add-on
+# FPP - Falcon Player App for Home Assistant
 # ============================================================
 
 # Mark as container so FPP skips hardware-specific checks
@@ -82,9 +82,8 @@ sed -i 's/^HostDescription = .*/HostDescription = "Home Assistant FPP"/' /home/f
 # Fix permissions for web UI write access
 # ------------------------------------------------------------------
 # fppinit sets ownership to fpp:fpp, but PHP-FPM may run as www-data.
-echo "[fpp] Settings file before fix: $(stat -c '%A %U:%G %n' /home/fpp/media/settings 2>&1)" >&2
+echo "[fpp] Setting permissions..."
 chmod -R a+rwX /home/fpp/media/ 2>&1
-echo "[fpp] Settings file after fix:  $(stat -c '%A %U:%G %n' /home/fpp/media/settings 2>&1)" >&2
 
 # ------------------------------------------------------------------
 # Signal handling
