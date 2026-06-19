@@ -77,13 +77,6 @@ RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
     yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch ${FPPBRANCH}
 
 # ------------------------------------------------------------------
-# Disable the in-app update checker
-# ------------------------------------------------------------------
-# Updates will be managed through Home Assistant — prevent FPP from
-# showing "updates available" banners or offering in-app upgrades.
-RUN sed -i 's/function checkForFppUpdate () {/function checkForFppUpdate () { return; \/\/ disabled for HA add-on/' /opt/fpp/www/js/fpp.js
-
-# ------------------------------------------------------------------
 # Container setup & cleanup
 # ------------------------------------------------------------------
 RUN rm -rf /tmp/*
