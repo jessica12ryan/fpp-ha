@@ -8,6 +8,8 @@
 
 FROM debian:trixie
 
+ARG FPPBRANCH=master
+
 # ------------------------------------------------------------------
 # APT optimisation & package install
 # ------------------------------------------------------------------
@@ -26,6 +28,9 @@ RUN echo '\
     APT::Install-Suggests "false";\
     Debug::Acquire::https "true";\
     ' > /etc/apt/apt.conf.d/99custom
+
+# Cache buster: invalidates Docker layers when FPP master branch advances
+ADD https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH} /tmp/.fpp-ref
 
 RUN apt-get update && apt-get -yq upgrade
 
