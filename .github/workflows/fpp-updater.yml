@@ -53,7 +53,7 @@ jobs:
           git pull origin master --rebase --autostash
 
       - name: Commit and Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: update updater.json and CHANGELOG"
           file_pattern: 'fpp-ha/updater.json fpp-ha/CHANGELOG.md'
