@@ -5,5 +5,5 @@
   "slug": "fpp-ha",
   "source": "github",
   "upstream_repo": "falconchristmas/fpp",
-  "upstream_version": "10.x-master"
+  "upstream_version": "master"
 }
