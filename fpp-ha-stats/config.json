@@ -7,8 +7,5 @@
   "init": false,
   "ingress": false,
   "stage": "experimental",
-  "ports": {
-    "80/tcp": 80,
-    "3000/tcp": 3000
-  }
+  "host_network": true
 }

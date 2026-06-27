@@ -7,8 +7,10 @@ RUN apk add --no-cache git nodejs npm bash && \
 # Clone the target application repository
 RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 
-# Run dependencies install inside the server folder (where index.js and collector.js live)
-RUN cd /app/server && npm install
+# Run dependencies install inside the server folder and downgrade octokit to v18 (CommonJS compatible)
+RUN cd /app/server && \
+    npm install && \
+    npm install @octokit/rest@18
 
 # Build direct runtime asset
 COPY run.sh /run.sh
