@@ -6,7 +6,7 @@ WEBSITE_DIR="/app/website"
 
 # Read the API Key value out of the Home Assistant Configuration options
 if [ -f "/data/options.json" ]; then
-    export API_KEY=$(node -e "echo require('/data/options.json').api_key" 2>/dev/null || cat /data/options.json | grep -o '"api_key": "[^"]*' | grep -o '[^"]*$')
+    export API_KEY=$(node -e "cl=require('/data/options.json'); console.log(cl.api_key)" 2>/dev/null || cat /data/options.json | grep -o '"api_key": "[^"]*' | grep -o '[^"]*$')
 fi
 
 # Fallback default key if parsing failed or file doesn't exist yet
@@ -30,13 +30,13 @@ ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 # Move to the application engine path
 cd /app/server
 
-# Start the collector daemon mode
+# Start the collector daemon mode - isolated on its own dummy port address
 echo "Launching Statistics Collector Daemon..."
-OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=collector node index.js &
+PORT=7655 OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=collector node index.js &
 
-# Start the web API engine mode using the parsed token asset
+# Start the web API engine mode - explicitly bound to the native app port
 echo "Launching Statistics Web API Server Engine..."
-OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+PORT=7654 OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
 
 # Move to the website asset folder and serve it on port 80
 echo "Launching Statistics Web Frontend Interface Dashboard..."
