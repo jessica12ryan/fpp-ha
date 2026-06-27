@@ -14,4 +14,4 @@ RUN cd /app/server && npm install && \
 # Copy s6 service definitions from local repository
 COPY services /etc/services.d
 
-CMD [ "/init" ]
+ENTRYPOINT ["/init"]
