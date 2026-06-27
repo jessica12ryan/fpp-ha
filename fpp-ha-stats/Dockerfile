@@ -4,7 +4,7 @@ FROM ${BUILD_FROM}
 # Install git, node, and npm
 RUN apk add --no-cache git nodejs npm
 
-# Clone the repository directly into /app
+# Clone the repository
 RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 
 # Install node dependencies
@@ -14,4 +14,5 @@ RUN cd /app/server && npm install && \
 # Copy s6 service definitions from local repository
 COPY services /etc/services.d
 
-ENTRYPOINT ["/init"]
+# DO NOT include CMD or ENTRYPOINT here. 
+# The base image handles the startup automatically.
