@@ -12,7 +12,7 @@ fi
 
 # Spin up services cleanly
 echo "Launching Statistics Collector Daemon..."
-cd /app/statsCollector
+cd /app/collector
 node collector.js &
 
 echo "Launching Statistics Web API Server Engine..."

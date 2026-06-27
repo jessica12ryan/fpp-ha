@@ -6,6 +6,7 @@
   "arch": ["aarch64", "amd64"],
   "init": false,
   "ingress": false,
+  "stage": "experimental",
   "ports": {
     "3000/tcp": 3000
   }
