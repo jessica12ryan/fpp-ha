@@ -1,3 +1,0 @@
-#!/usr/bin/with-contenv bash
-cd /app/server
-exec node server.js

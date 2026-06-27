@@ -8,6 +8,9 @@ RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 RUN cd /app/server && npm install && \
     cd /app/statsCollector && npm install
 
-COPY services /etc/services.d
+# Copy our manual startup script
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
 
-ENTRYPOINT ["/init"]
+# Use our script as the entrypoint
+ENTRYPOINT ["/run.sh"]

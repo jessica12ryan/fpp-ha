@@ -1,3 +1,0 @@
-#!/usr/bin/with-contenv bash
-cd /app/statsCollector
-exec node collector.js
