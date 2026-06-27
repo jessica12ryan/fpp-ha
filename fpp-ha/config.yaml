@@ -1,6 +1,6 @@
-name: "Falcon Player (FPP) - v10"
+name: "FPP - Falcon Player"
 description: "Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player"
-version: "master"
+version: "10.x-master"
 slug: "fpp-ha"
 url: "https://github.com/jessica12ryan/fpp-ha"
 
