@@ -8,8 +8,8 @@ RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 RUN cd /app/server && npm install && \
     cd /app/statsCollector && npm install
 
-# Copy service definition
-COPY services /etc/services.d
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
 
-# Force /init to be the primary entrypoint
-ENTRYPOINT ["/init"]
+# Bypass /init and run our script directly
+CMD ["/run.sh"]
