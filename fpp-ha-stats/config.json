@@ -2,11 +2,11 @@
   "name": "FPP Stats Server",
   "version": "1.0.0",
   "slug": "fpp-ha-stats",
-  "description": "FPP Statistics server (Manual script build)",
+  "description": "FPP Statistics server (Unified Service)",
   "arch": ["aarch64", "amd64"],
   "ingress": false,
   "ports": {
     "3000/tcp": 3000
   },
-  "startup": "once"
+  "startup": "services"
 }
