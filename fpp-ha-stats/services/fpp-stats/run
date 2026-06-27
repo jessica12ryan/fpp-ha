@@ -1,9 +1,7 @@
 #!/bin/sh
-# Launch the processes directly without environment wrappers
+# Launch processes manually
 cd /app/server
 node server.js &
 cd /app/statsCollector
 node collector.js &
-
-# Keep the container running
 wait

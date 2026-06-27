@@ -8,5 +8,8 @@ RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 RUN cd /app/server && npm install && \
     cd /app/statsCollector && npm install
 
-# Copy the service folder
+# Copy service definition
 COPY services /etc/services.d
+
+# Force /init to be the primary entrypoint
+ENTRYPOINT ["/init"]
