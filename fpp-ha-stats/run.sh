@@ -30,18 +30,30 @@ ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 # Move to the application engine path
 cd /app/server
 
-# Start the collector daemon mode - isolated on its own dummy port address
-echo "Launching Statistics Collector Daemon..."
-PORT=7655 OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=collector node index.js &
-
-# Start the web API engine mode - explicitly bound to the native app port
+# 1. Start the main API Web Server engine (Runs continuously)
 echo "Launching Statistics Web API Server Engine..."
-PORT=7654 OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+SERVER_PID=$!
 
-# Move to the website asset folder and serve it on port 80
+# 2. Move to the website asset folder and serve it on port 80
 echo "Launching Statistics Web Frontend Interface Dashboard..."
 cd "$WEBSITE_DIR"
 http-server -p 80 &
+HTTP_PID=$!
 
-# Monitor processes
-wait -n
+# 3. Dynamic background loop for the Data Collector aggregation pass
+(
+    cd /app/server
+    # Give the server a few seconds to fully initialize first
+    sleep 5
+    while true; do
+        echo "[Collector Loop] Running data aggregation pass to compile summary.json..."
+        OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=collector node index.js
+        echo "[Collector Loop] Pass complete. Sleeping for 5 minutes..."
+        sleep 300
+    done
+) &
+COLLECTOR_LOOP_PID=$!
+
+# Keep container alive and track essential tasks
+wait $SERVER_PID $HTTP_PID
