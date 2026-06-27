@@ -10,13 +10,13 @@ if [ ! -L "/app/storage" ]; then
     ln -s /data/storage /app/storage
 fi
 
-# Spin up services cleanly
+# Change to the server directory where both files live
+cd /app/server
+
 echo "Launching Statistics Collector Daemon..."
-cd /app/collector
 node collector.js &
 
 echo "Launching Statistics Web API Server Engine..."
-cd /app/server
 node server.js &
 
 # Monitor processes
