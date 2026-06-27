@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+mkdir -p /data/storage
+if [ ! -L /app/storage ]; then
+    ln -s /data/storage /app/storage
+fi

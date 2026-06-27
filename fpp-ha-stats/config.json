@@ -1,0 +1,12 @@
+{
+  "name": "FPP Stats Server",
+  "version": "1.0.0",
+  "slug": "fpp-ha-stats",
+  "description": "FPP Statistics server (Dynamic build)",
+  "arch": ["aarch64", "amd64"],
+  "ingress": false,
+  "ports": {
+    "3000/tcp": 3000
+  },
+  "startup": "services"
+}
