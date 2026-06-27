@@ -1,12 +1,13 @@
 FROM alpine:3.19
 
-# Install baseline application environments and git
-RUN apk add --no-cache git nodejs npm bash
+# Install baseline application environments, git, and a global static file server
+RUN apk add --no-cache git nodejs npm bash && \
+    npm install -g http-server
 
 # Clone the target application repository
 RUN git clone https://github.com/FalconChristmas/fpp-stats-server.git /app
 
-# Run dependencies install once (both scripts live here)
+# Run dependencies install inside the server folder (where index.js and collector.js live)
 RUN cd /app/server && npm install
 
 # Build direct runtime asset

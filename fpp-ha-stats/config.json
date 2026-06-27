@@ -2,12 +2,13 @@
   "name": "FPP Stats Server",
   "version": "1.0.0",
   "slug": "fpp-ha-stats",
-  "description": "FPP Statistics server (Vanilla Alpine Engine)",
+  "description": "FPP Statistics server and dashboard viewer",
   "arch": ["aarch64", "amd64"],
   "init": false,
   "ingress": false,
   "stage": "experimental",
   "ports": {
+    "80/tcp": 80,
     "3000/tcp": 3000
   }
 }

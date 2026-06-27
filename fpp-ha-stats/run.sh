@@ -10,14 +10,19 @@ if [ ! -L "/app/storage" ]; then
     ln -s /data/storage /app/storage
 fi
 
-# Change to the server directory where both files live
+# Change directory to the backend engine
 cd /app/server
 
 echo "Launching Statistics Collector Daemon..."
 node collector.js &
 
 echo "Launching Statistics Web API Server Engine..."
-node server.js &
+node index.js &
+
+# Move to the website asset folder and serve it on port 80
+echo "Launching Statistics Web Frontend Interface Dashboard..."
+cd /app/website
+http-server -p 80 &
 
 # Monitor processes
 wait -n
