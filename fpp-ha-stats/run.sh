@@ -30,10 +30,14 @@ ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 # Move to the application engine path
 cd /app/server
 
+# Patch: Force Octokit to run anonymously so it stops using API_KEY as a GitHub token
+if [ -f "lib/github.js" ]; then
+    sed -i "s/auth: process.env.API_KEY/auth: undefined/g" lib/github.js
+fi
+
 # 1. Start the main API Web Server engine (Runs continuously on port 7654)
-# GITHUB_TOKEN=false ensures it skips using your API_KEY as a GitHub OAuth token
 echo "Launching Statistics Web API Server Engine..."
-GITHUB_TOKEN=false OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
 SERVER_PID=$!
 
 # 2. Move to the website asset folder and serve it internally on port 80
@@ -48,7 +52,6 @@ HTTP_PID=$!
     sleep 5
     while true; do
         echo "[Collector Loop] Running data aggregation pass straight through backend library modules..."
-        # Running the collector script directly completely avoids port 7654 conflicts!
         OUTPUT_DIR="/tmp/output" node -e "
             const Collector = require('/app/server/lib/collector.js');
             const col = new Collector();
