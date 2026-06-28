@@ -30,26 +30,31 @@ ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 # Move to the application engine path
 cd /app/server
 
-# 1. Start the main API Web Server engine (Runs continuously)
+# 1. Start the main API Web Server engine (Runs continuously on port 7654)
+# GITHUB_TOKEN=false ensures it skips using your API_KEY as a GitHub OAuth token
 echo "Launching Statistics Web API Server Engine..."
-OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+GITHUB_TOKEN=false OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
 SERVER_PID=$!
 
-# 2. Move to the website asset folder and serve it on port 80
+# 2. Move to the website asset folder and serve it internally on port 80
 echo "Launching Statistics Web Frontend Interface Dashboard..."
 cd "$WEBSITE_DIR"
 http-server -p 80 &
 HTTP_PID=$!
 
-# 3. Dynamic background loop for the Data Collector aggregation pass
+# 3. Dynamic background loop targeting the backend collector engine directly
 (
-    cd /app/server
-    # Give the server a few seconds to fully initialize first
+    # Give the primary server 5 seconds to warm up first
     sleep 5
     while true; do
-        echo "[Collector Loop] Running data aggregation pass to compile summary.json..."
-        OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=collector node index.js
-        echo "[Collector Loop] Pass complete. Sleeping for 5 minutes..."
+        echo "[Collector Loop] Running data aggregation pass straight through backend library modules..."
+        # Running the collector script directly completely avoids port 7654 conflicts!
+        OUTPUT_DIR="/tmp/output" node -e "
+            const Collector = require('/app/server/lib/collector.js');
+            const col = new Collector();
+            col.run().then(() => console.log('[Collector Loop] Aggregation pass finished successfully.')).catch(err => console.error('[Collector Loop] Error:', err));
+        "
+        echo "[Collector Loop] Sleeping for 5 minutes..."
         sleep 300
     done
 ) &
