@@ -8,8 +8,8 @@
   "init": false,
   "ingress": false,
   "stage": "experimental",
-  "webui": "http://[HOST]:[PORT:80]"
-  "panel_icon": mdi:led-strip-variant
+  "webui": "http://[HOST]:[PORT:80]",
+  "panel_icon": "mdi:led-strip-variant",
   "ports": {
     "80/tcp": 80,
     "7654/tcp": 7654
