@@ -12,6 +12,10 @@ RUN cd /app/server && \
     npm install && \
     npm install @octokit/rest@18
 
+# NEW: Run dependencies install inside the statsCollector folder
+RUN cd /app/statsCollector && \
+    npm install
+
 # Build direct runtime asset
 COPY run.sh /run.sh
 RUN chmod +x /run.sh

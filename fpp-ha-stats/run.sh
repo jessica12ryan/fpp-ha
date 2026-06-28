@@ -24,19 +24,22 @@ mkdir -p /app/server
 ln -sf "$STORAGE_DIR/data" /app/server/data
 ln -sf "$STORAGE_DIR/processed" /app/server/processed
 
+# Link storage folders into the statsCollector workspace
+mkdir -p /app/statsCollector
+ln -sf "$STORAGE_DIR/data" /app/statsCollector/data
+ln -sf "$STORAGE_DIR/processed" /app/statsCollector/processed
+
 # Map the website summary output straight into the web directory
 ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 
-# Move to the application engine path
-cd /app/server
-
 # Patch: Force Octokit to run anonymously so it stops using API_KEY as a GitHub token
-if [ -f "lib/github.js" ]; then
-    sed -i "s/auth: process.env.API_KEY/auth: undefined/g" lib/github.js
+if [ -f "/app/server/lib/github.js" ]; then
+    sed -i "s/auth: process.env.API_KEY/auth: undefined/g" /app/server/lib/github.js
 fi
 
 # 1. Start the main API Web Server engine (Runs continuously on port 7654)
 echo "Launching Statistics Web API Server Engine..."
+cd /app/server
 OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
 SERVER_PID=$!
 
@@ -46,18 +49,15 @@ cd "$WEBSITE_DIR"
 http-server -p 80 &
 HTTP_PID=$!
 
-# 3. Dynamic background loop targeting the backend collector engine directly
+# 3. Dynamic background loop targeting the true statsCollector package
 (
     # Give the primary server 5 seconds to warm up first
     sleep 5
     while true; do
-        echo "[Collector Loop] Running data aggregation pass straight through backend library modules..."
-        OUTPUT_DIR="/tmp/output" node -e "
-            const Collector = require('/app/server/lib/collector.js');
-            const col = new Collector();
-            col.run().then(() => console.log('[Collector Loop] Aggregation pass finished successfully.')).catch(err => console.error('[Collector Loop] Error:', err));
-        "
-        echo "[Collector Loop] Sleeping for 5 minutes..."
+        echo "[Collector Loop] Running data aggregation pass in statsCollector folder..."
+        cd /app/statsCollector
+        OUTPUT_DIR="/tmp/output" node index.js
+        echo "[Collector Loop] Aggregation pass finished. Sleeping for 5 minutes..."
         sleep 300
     done
 ) &
