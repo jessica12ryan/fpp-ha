@@ -8,7 +8,10 @@
   "init": false,
   "ingress": false,
   "stage": "experimental",
-  "host_network": true,
+  "ports": {
+    "80/tcp": 80,
+    "7654/tcp": 7654
+  },
   "options": {
     "api_key": "ChangeMeToASecretKey123"
   },
