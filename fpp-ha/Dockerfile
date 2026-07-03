@@ -81,6 +81,12 @@ RUN git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /
 RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
     yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch ${FPPBRANCH}
 
+# Install nocc (distributed C++ compiler) from FPP's apt repo, which
+# FPP_Install.sh just configured above (under --skip-apt-install it
+# defers the actual apt install to us).
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq nocc \
+    || echo "WARNING: nocc install skipped (FPP apt repo unreachable)"
+
 # ------------------------------------------------------------------
 # Container setup & cleanup
 # ------------------------------------------------------------------
@@ -97,6 +103,6 @@ RUN chmod +x /run.sh
 
 VOLUME /home/fpp/media
 
-EXPOSE 80 4048/udp 5568/udp 32320/udp
+EXPOSE 80 4048/udp 5568/udp 32320/udp 32322 9000/udp 9000/tcp
 
 ENTRYPOINT ["/run.sh"]
