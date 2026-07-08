@@ -39,6 +39,12 @@ https://github.com/jessica12ryan/fpp-ha
 
 For more information, check the included app documentation.
 
+---
+
+## 📄 License
+
+This repository is MIT licensed. FPP itself is licensed under its own terms — see [FalconChristmas/fpp](https://github.com/FalconChristmas/fpp).
+
 
 [aarch64no-badge]: https://img.shields.io/badge/aarch64-no-red.svg
 [aarch64-badge]: https://img.shields.io/badge/aarch64-yes-green.svg
