@@ -35,24 +35,28 @@ ADD https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH}
 RUN apt-get update && apt-get -yq upgrade
 
 ARG PHPVER="8.4"
-ARG PACKAGE_LIST="alsa-utils arping avahi-daemon avahi-utils locales nano net-tools \
-    apache2 apache2-bin apache2-data apache2-utils libavahi-client-dev \
-    bc bash-completion btrfs-progs exfatprogs lsof ethtool curl zip unzip bzip2 wireless-tools dos2unix \
-    fbi fbset file flite ca-certificates lshw gettext wget iproute2 \
-    build-essential ffmpeg gcc g++ gdb vim vim-common bison flex device-tree-compiler dh-autoreconf \
+ARG PACKAGE_LIST="alsa-utils arping avahi-daemon avahi-utils locales nano net-tools distcc \
+    apache2 apache2-bin apache2-data apache2-utils libavahi-client-dev util-linux-extra \
+    bc bash-completion btrfs-progs exfat-fuse exfatprogs lsof ethtool curl zip unzip bzip2 wireless-tools dos2unix \
+    fbi fbset file flite ca-certificates lshw gettext wget iproute2 fswatch \
+    build-essential ffmpeg gcc g++ gdb mold vim vim-common bison flex device-tree-compiler dh-autoreconf \
     git hdparm i2c-tools jq less sysstat tcpdump time usbutils usb-modeswitch \
-    samba rsync sudo shellinabox dnsmasq hostapd vsftpd ntpsec sqlite3 at haveged samba samba-common-bin \
-    mp3info exim4 mailutils dhcp-helper parprouted bridge-utils libiio-utils \
+    samba rsync sudo shellinabox dnsmasq hostapd vsftpd chrony sqlite3 at haveged samba samba-common-bin \
+    mp3info exim4 mailutils dhcp-helper parprouted bridge-utils libiio-utils libhidapi-dev \
     php${PHPVER} php${PHPVER}-cli php${PHPVER}-fpm php${PHPVER}-common php${PHPVER}-curl php-pear \
-    php${PHPVER}-bcmath php${PHPVER}-sqlite3 php${PHPVER}-zip php${PHPVER}-xml \
+    php${PHPVER}-bcmath php${PHPVER}-sqlite3 php${PHPVER}-zip php${PHPVER}-xml ccache \
     libtag1-dev \
-    vorbis-tools libgraphicsmagick++-dev graphicsmagick-libmagick-dev-compat libdrogon-dev \
-    gettext x265 libtheora-dev libvorbis-dev libx265-dev iputils-ping mp3gain \
-    libmosquitto-dev mosquitto-clients mosquitto libzstd-dev xz-utils zstd gpiod libgpiod-dev libjsoncpp-dev libcurl4-openssl-dev libnl-3-dev libnl-genl-3-dev \
+    vorbis-tools libgraphicsmagick++1-dev graphicsmagick-libmagick-dev-compat libdrogon-dev \
+    gettext apt-utils x265 libtheora-dev libvorbis-dev libx265-dev iputils-ping mp3gain clang-format \
+    libmosquitto-dev mosquitto-clients mosquitto libzstd-dev lzma zstd gpiod libgpiod-dev libjsoncpp-dev libcurl4-openssl-dev libnl-3-dev libnl-genl-3-dev \
     fonts-freefont-ttf flex bison pkg-config libasound2-dev libsdl2-dev libsdl3-dev mesa-common-dev qrencode libusb-1.0-0-dev \
-    flex bison pkg-config libasound2-dev python3-setuptools libssl-dev libtool bsdextrautils iw rsyslog tzdata ccache libsystemd-dev \
+    flex bison pkg-config libasound2-dev python3-setuptools libssl-dev libtool bsdextrautils iw rsyslog tzdata libsystemd-dev \
     pipewire pipewire-bin pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio-client-libraries wireplumber \
-    libpipewire-0.3-dev libspa-0.2-bluetooth pulseaudio-utils \
+    libpipewire-0.3-dev libspa-0.2-bluetooth pulseaudio-utils linuxptp \
+    gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-base-apps gstreamer1.0-plugins-good gstreamer1.0-alsa \
+    gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire \
+    gstreamer1.0-libav gstreamer1.0-gl gstreamer1.0-x \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-0 \
     yt-dlp"
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST
