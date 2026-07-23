@@ -57,7 +57,7 @@ ARG PACKAGE_LIST="alsa-utils arping avahi-daemon avahi-utils locales nano net-to
     gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire \
     gstreamer1.0-libav gstreamer1.0-gl gstreamer1.0-x \
     libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-0 \
-    yt-dlp"
+    python3-pip yt-dlp"
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST
 
