@@ -63,5 +63,15 @@ HTTP_PID=$!
 ) &
 COLLECTOR_LOOP_PID=$!
 
+# Trap SIGTERM and SIGINT for graceful shutdown
+cleanup() {
+    echo "[fpp-ha-stats] Shutting down gracefully..."
+    kill -TERM $SERVER_PID $HTTP_PID $COLLECTOR_LOOP_PID 2>/dev/null
+    wait $SERVER_PID $HTTP_PID $COLLECTOR_LOOP_PID 2>/dev/null
+    echo "[fpp-ha-stats] Shutdown complete"
+    exit 0
+}
+trap cleanup SIGTERM SIGINT
+
 # Keep container alive and track essential tasks
-wait $SERVER_PID $HTTP_PID
+wait $SERVER_PID $HTTP_PID $COLLECTOR_LOOP_PID
