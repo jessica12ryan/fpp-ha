@@ -3,12 +3,12 @@
 # -----------------------------------
 # ----------- Dockerfile ------------
 # -----------------------------------
-# Builds FPP from source on Debian Trixie (master/10.x branch).
+# Builds FPP from source on Debian Trixie (branch/tag set in config.yaml).
 # In-app update checker is disabled — updates are managed via Home Assistant.
 
 FROM debian:trixie
 
-ARG FPPBRANCH=master
+COPY config.yaml /tmp/config.yaml
 
 # ------------------------------------------------------------------
 # APT optimisation & package install
@@ -28,9 +28,6 @@ RUN echo '\
     APT::Install-Suggests "false";\
     Debug::Acquire::https "true";\
     ' > /etc/apt/apt.conf.d/99custom
-
-# Cache buster: invalidates Docker layers when FPP master branch advances
-ADD https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH} /tmp/.fpp-ref
 
 RUN apt-get update && apt-get -yq upgrade
 
@@ -67,13 +64,20 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg
 RUN apt-get clean
 
 # ------------------------------------------------------------------
-# Clone FPP from the master branch (full depth so git describe works)
+# Clone FPP from the version specified in config.yaml (full depth so git describe works)
 # ------------------------------------------------------------------
-ARG FPPBRANCH=master
-ENV FPPBRANCH=${FPPBRANCH}
+
+# Cache buster: invalidates Docker layers when the FPP remote ref changes
+RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+    if echo "$FPPBRANCH" | grep -q '^v'; then \
+        curl -sS -o /tmp/.fpp-ref "https://api.github.com/repos/FalconChristmas/fpp/git/refs/tags/${FPPBRANCH}"; \
+    else \
+        curl -sS -o /tmp/.fpp-ref "https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH}"; \
+    fi
 
 WORKDIR /opt
-RUN git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /opt/fpp
+RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+    git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /opt/fpp
 
 # ------------------------------------------------------------------
 # Build FPP using the official install script
@@ -83,6 +87,7 @@ RUN git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /
 # --skip-apt-install : packages already installed above
 # --skip-clone       : repo already cloned above
 RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
+    FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
     yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch ${FPPBRANCH}
 
 # Install nocc (distributed C++ compiler) from FPP's apt repo, which
