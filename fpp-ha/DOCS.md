@@ -18,7 +18,7 @@ If you want to add the repository manually, please follow the procedure highligh
 
 ## Installation
 
-- After clicking install, it may take several minutes to download, compile, and install. You must remain on that page until the install completes. (Planning to switch to precompiled builds following the stable release of FPP 10. This will drastically reduce install times.)
+- After clicking install, it may take a few minutes to download, and install.
 - You can open FPP by browsing to http://HA_IP or clicking the Open Web UI button.
 
 ## Troubleshooting:
