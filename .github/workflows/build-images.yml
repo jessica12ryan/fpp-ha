@@ -32,10 +32,9 @@ jobs:
       - name: Resolve FPP Version
         id: resolve
         run: |
-          VERSION="${inputs.version:-v10.0-beta}"
+          VERSION="${{ inputs.version }}"
           if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            echo "::error::Could not resolve an FPP version. Provide one via the workflow inputs."
-            exit 1
+            VERSION="v10.0-beta"
           fi
           echo "Resolved version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
