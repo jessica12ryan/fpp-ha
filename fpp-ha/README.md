@@ -4,7 +4,7 @@
 
 ## Installation
 
-- The app will take a few minutes to download and install.
+- After clicking install, it may take a few minutes to download, and install.
 - You can open FPP by browsing to http://HA_IP or clicking the Open Web UI button.
 
 ## More Info
