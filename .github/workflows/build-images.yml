@@ -45,11 +45,26 @@ jobs:
           sed -i -E "s|^version:[[:space:]]*\".*\"|version: \"$VERSION\"|" "${{ env.ADDON_PATH }}/config.yaml"
           grep '^version:' "${{ env.ADDON_PATH }}/config.yaml"
 
+      - name: Update Upstream Version
+        run: |
+          VERSION="${{ steps.resolve.outputs.version }}"
+          python3 - "$VERSION" <<'EOF'
+import json, sys
+path = "fpp-ha/updater.json"
+with open(path) as f:
+    data = json.load(f)
+data["upstream_version"] = sys.argv[1]
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+EOF
+          grep '"upstream_version"' "${{ env.ADDON_PATH }}/updater.json"
+
       - name: Commit Version Bump
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: bump add-on version to ${{ steps.resolve.outputs.version }}"
-          file_pattern: 'fpp-ha/config.yaml'
+          file_pattern: 'fpp-ha/config.yaml fpp-ha/updater.json'
           commit_user_name: "github-actions[bot]"
           commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
 
