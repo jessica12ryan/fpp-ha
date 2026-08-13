@@ -45,26 +45,41 @@ jobs:
           sed -i -E "s|^version:[[:space:]]*\".*\"|version: \"$VERSION\"|" "${{ env.ADDON_PATH }}/config.yaml"
           grep '^version:' "${{ env.ADDON_PATH }}/config.yaml"
 
-      - name: Update Upstream Version
+      - name: Update Upstream Metadata
         run: |
           VERSION="${{ steps.resolve.outputs.version }}"
-          python3 - "$VERSION" <<'EOF'
+          DATE=$(date +'%d-%m-%Y')
+          python3 - "$VERSION" "$DATE" <<'EOF'
 import json, sys
 path = "fpp-ha/updater.json"
 with open(path) as f:
     data = json.load(f)
 data["upstream_version"] = sys.argv[1]
+data["last_update"] = sys.argv[2]
 with open(path, "w") as f:
     json.dump(data, f, indent=2)
     f.write("\n")
 EOF
-          grep '"upstream_version"' "${{ env.ADDON_PATH }}/updater.json"
+          grep -E '"(upstream_version|last_update)"' "${{ env.ADDON_PATH }}/updater.json"
+
+      - name: Update Changelog
+        run: |
+          VERSION="${{ steps.resolve.outputs.version }}"
+          DATE=$(date +'%d-%m-%Y')
+          CHANGELOG="${{ env.ADDON_PATH }}/CHANGELOG.md"
+          if ! grep -q "## $VERSION" "$CHANGELOG"; then
+            TEMP_CHANGELOG=$(mktemp)
+            printf '## %s (%s)\n\n- Updated app to version %s\n\n' "$VERSION" "$DATE" "$VERSION" > "$TEMP_CHANGELOG"
+            cat "$CHANGELOG" >> "$TEMP_CHANGELOG"
+            mv "$TEMP_CHANGELOG" "$CHANGELOG"
+          fi
+          head -3 "$CHANGELOG"
 
       - name: Commit Version Bump
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: bump add-on version to ${{ steps.resolve.outputs.version }}"
-          file_pattern: 'fpp-ha/config.yaml fpp-ha/updater.json'
+          file_pattern: 'fpp-ha/config.yaml fpp-ha/updater.json fpp-ha/CHANGELOG.md'
           commit_user_name: "github-actions[bot]"
           commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
 
