@@ -13,7 +13,9 @@ COPY config.yaml /tmp/config.yaml
 # ------------------------------------------------------------------
 # APT optimisation & package install
 # ------------------------------------------------------------------
-# (Mirrors the official FalconChristmas/fpp Dockerfile layout)
+# The dependency list is not hardcoded here: it is extracted from the exact
+# FPP_Install.sh of the version being built (set in config.yaml), so the
+# packages always match the FPP repo instead of drifting out of sync.
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
 
@@ -32,32 +34,23 @@ RUN echo '\
 RUN apt-get update && apt-get -yq upgrade
 
 ARG PHPVER="8.4"
-ARG PACKAGE_LIST="alsa-utils arping avahi-daemon avahi-utils locales nano net-tools distcc \
-    apache2 apache2-bin apache2-data apache2-utils libavahi-client-dev util-linux-extra \
-    bc bash-completion btrfs-progs exfat-fuse exfatprogs lsof ethtool curl zip unzip bzip2 wireless-tools dos2unix \
-    fbi fbset file flite ca-certificates lshw gettext wget iproute2 fswatch \
-    build-essential ffmpeg gcc g++ gdb mold vim vim-common bison flex device-tree-compiler dh-autoreconf \
-    git hdparm i2c-tools jq less sysstat tcpdump time usbutils usb-modeswitch \
-    samba rsync sudo shellinabox dnsmasq hostapd vsftpd chrony sqlite3 at haveged samba samba-common-bin \
-    mp3info exim4 mailutils dhcp-helper parprouted bridge-utils libiio-utils libhidapi-dev \
-    php${PHPVER} php${PHPVER}-cli php${PHPVER}-fpm php${PHPVER}-common php${PHPVER}-curl php-pear \
-    php${PHPVER}-bcmath php${PHPVER}-sqlite3 php${PHPVER}-zip php${PHPVER}-xml ccache \
-    libtag1-dev \
-    vorbis-tools libgraphicsmagick++1-dev graphicsmagick-libmagick-dev-compat libdrogon-dev \
-    gettext apt-utils x265 libtheora-dev libvorbis-dev libx265-dev iputils-ping mp3gain clang-format \
-    libmosquitto-dev mosquitto-clients mosquitto libzstd-dev lzma zstd gpiod libgpiod-dev libjsoncpp-dev libcurl4-openssl-dev libnl-3-dev libnl-genl-3-dev \
-    fonts-freefont-ttf flex bison pkg-config libasound2-dev libsdl2-dev libsdl3-dev mesa-common-dev qrencode libusb-1.0-0-dev \
-    flex bison pkg-config libasound2-dev python3-setuptools libssl-dev libtool bsdextrautils iw rsyslog tzdata libsystemd-dev \
-    pipewire pipewire-bin pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio-client-libraries wireplumber \
-    libpipewire-0.3-dev libspa-0.2-bluetooth pulseaudio-utils linuxptp \
-    gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-base-apps gstreamer1.0-plugins-good gstreamer1.0-alsa \
-    gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire \
-    gstreamer1.0-libav gstreamer1.0-gl gstreamer1.0-x \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-0 \
-    python3-pip yt-dlp"
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST
+# Fetch the exact FPP_Install.sh for the FPP ref being built. It is later run
+# with --skip-apt-install, so we install its package list ourselves below.
+# Pulling it here keeps the dependency set in lockstep with the FPP repo and
+# doubles as a cache buster for the apt layers whenever the FPP ref changes.
+RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+    curl -sS -o /tmp/FPP_Install.sh "https://raw.githubusercontent.com/FalconChristmas/fpp/${FPPBRANCH}/SD/FPP_Install.sh"
 
+# Extract the base PACKAGE_LIST from FPP_Install.sh, then add the platform
+# extras the script installs on a Debian host (libva-dev smartmontools
+# chrony pipewire). The PHP version is injected from the ARG above.
+RUN PACKAGE_LIST=$(awk '/^[[:space:]]*PACKAGE_LIST="/{sub(/^[[:space:]]*PACKAGE_LIST="/,"");gsub(/\\/,"");buf=$0;inlist=1;next} inlist{gsub(/\\/,"");buf=buf " " $0} inlist&&/"$/{sub(/"$/,"",buf);print buf;exit}' /tmp/FPP_Install.sh) && \
+    PACKAGE_LIST="${PACKAGE_LIST} libva-dev smartmontools chrony pipewire" && \
+    PACKAGE_LIST=$(printf '%s' "$PACKAGE_LIST" | sed "s/\${PHPVER}/${PHPVER}/g") && \
+    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST
+
+# Packages unique to the docker build
 ARG PACKAGE_LIST_DOCKER=ssh
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST_DOCKER
 
@@ -67,12 +60,13 @@ RUN apt-get clean
 # Clone FPP from the version specified in config.yaml (full depth so git describe works)
 # ------------------------------------------------------------------
 
-# Cache buster: invalidates Docker layers when the FPP remote ref changes
+# Cache buster: invalidates Docker layers when the FPP remote ref changes.
+# The FPP 10 official release is tracked as a branch, so check heads first,
+# then fall back to tags.
 RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
-    if echo "$FPPBRANCH" | grep -q '^v'; then \
+    STATUS=$(curl -sS -o /tmp/.fpp-ref -w '%{http_code}' "https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH}") && \
+    if [ "$STATUS" != "200" ]; then \
         curl -sS -o /tmp/.fpp-ref "https://api.github.com/repos/FalconChristmas/fpp/git/refs/tags/${FPPBRANCH}"; \
-    else \
-        curl -sS -o /tmp/.fpp-ref "https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH}"; \
     fi
 
 WORKDIR /opt

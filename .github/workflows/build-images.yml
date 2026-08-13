@@ -1,0 +1,114 @@
+name: Build and Publish FPP-HA Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'FPP version to build (git tag/branch). Defaults to the FPP 10 beta branch.'
+        required: false
+        default: 'v10.0-beta'
+        type: string
+
+concurrency:
+  group: fpp-ha-build
+  cancel-in-progress: true
+
+env:
+  ADDON_PATH: fpp-ha
+  IMAGE_OWNER: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Resolve FPP Version
+        id: resolve
+        run: |
+          VERSION="${inputs.version:-v10.0-beta}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "::error::Could not resolve an FPP version. Provide one via the workflow inputs."
+            exit 1
+          fi
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update Add-on Version
+        run: |
+          VERSION="${{ steps.resolve.outputs.version }}"
+          sed -i -E "s|^version:[[:space:]]*\".*\"|version: \"$VERSION\"|" "${{ env.ADDON_PATH }}/config.yaml"
+          grep '^version:' "${{ env.ADDON_PATH }}/config.yaml"
+
+      - name: Commit Version Bump
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: bump add-on version to ${{ steps.resolve.outputs.version }}"
+          file_pattern: 'fpp-ha/config.yaml'
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Prepare Build Matrix
+        id: matrix
+        run: |
+          matrix='{"include":[]}'
+          for arch in amd64 aarch64; do
+            case "$arch" in
+              amd64)   os="ubuntu-24.04";     platform="linux/amd64" ;;
+              aarch64) os="ubuntu-24.04-arm"; platform="linux/arm64" ;;
+            esac
+            image="${{ env.IMAGE_OWNER }}/${arch}-addon-fpp-ha"
+            matrix=$(jq -c --arg arch "$arch" --arg os "$os" --arg platform "$platform" --arg image "$image" \
+              '.include += [{arch: $arch, os: $os, platform: $platform, image: $image}]' <<< "$matrix")
+          done
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          jq . <<< "$matrix"
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ env.ADDON_PATH }}
+          file: ./${{ env.ADDON_PATH }}/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: |
+            ${{ matrix.image }}:${{ needs.prepare.outputs.version }}
+            ${{ matrix.image }}:latest
+          labels: |
+            io.hass.name=FPP - Falcon Player
+            io.hass.description=Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player
+            io.hass.version=${{ needs.prepare.outputs.version }}
+            io.hass.type=add-on
+            io.hass.slug=fpp-ha
+            io.hass.arch=${{ matrix.arch }}
+          cache-from: type=gha,scope=addon-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=addon-${{ matrix.arch }}

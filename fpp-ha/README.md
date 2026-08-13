@@ -4,7 +4,7 @@
 
 ## Installation
 
-- After clicking install, it may take several minutes to download, compile, and install. You must remain on that page until the install completes. (Planning to switch to precompiled builds following the stable release of FPP 10. This will drastically reduce install times.)
+- The add-on is distributed as a precompiled image, so installation is fast — the image is downloaded and installed in a matter of minutes.
 - You can open FPP by browsing to http://HA_IP or clicking the Open Web UI button.
 
 ## More Info

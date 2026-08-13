@@ -2,6 +2,7 @@ name: "FPP - Falcon Player"
 description: "Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player"
 version: "v10.0-beta"
 slug: "fpp-ha"
+image: "ghcr.io/jessica12ryan/{arch}-addon-fpp-ha"
 url: "https://github.com/jessica12ryan/fpp-ha"
 
 arch:
