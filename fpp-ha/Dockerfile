@@ -113,18 +113,11 @@ RUN /opt/fpp/src/fppinit start
 # 3. autoremove --purge everything no longer required.
 # 4. Sanity-check that every runtime ELF dependency still resolves.
 RUN set -e; \
-    echo "=== dpkg -S probe ==="; \
-    PROBE=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
-        | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u | head -1); \
-    echo "PROBE=$PROBE"; \
-    dpkg -S "$PROBE" 2>&1 || true; \
-    dpkg-query -S "$PROBE" 2>&1 || true; \
-    echo "=== per-path mapping ==="; \
     PROTECTED_PKGS=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
         | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u \
         | while read -r lib; do \
-            dpkg-query -S "$lib" 2>/dev/null | cut -d: -f1; \
-          done | grep -v '^diversion' | sort -u); \
+            dpkg-query -S "$(realpath -m "$lib")" 2>/dev/null | grep -E '^[^ :]+: ' | cut -d: -f1; \
+          done | sort -u); \
     echo "PROTECTED_PKGS: $(printf '%s\n' "$PROTECTED_PKGS" | grep -c .) packages"; \
     echo "$PROTECTED_PKGS"; \
     if [ -n "$PROTECTED_PKGS" ]; then apt-mark manual $PROTECTED_PKGS; fi; \
