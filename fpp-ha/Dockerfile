@@ -3,10 +3,18 @@
 # -----------------------------------
 # ----------- Dockerfile ------------
 # -----------------------------------
-# Builds FPP from source on Debian Trixie (branch/tag set in config.yaml).
+# Two-stage build:
+#   stage "build" : compiles FPP on Debian Trixie (branch/tag set in
+#                   config.yaml) and strips the build toolchain + *-dev
+#                   packages that FPP no longer needs at runtime.
+#   stage "final" : a clean Debian base that receives the fully-built
+#                   runtime filesystem via COPY, so the removed packages
+#                   never contribute bytes to the shipped image (a plain
+#                   single-stage apt purge would leave their data in
+#                   lower layers and not shrink the image).
 # In-app update checker is disabled — updates are managed via Home Assistant.
 
-FROM debian:trixie
+FROM debian:trixie AS build
 
 COPY config.yaml /tmp/config.yaml
 
@@ -117,21 +125,32 @@ RUN set -e; \
         | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u \
         | while read -r lib; do \
             dpkg-query -S "$(realpath -m "$lib")" 2>/dev/null \
-              | sed -n 's/^\(.*\): \//\1/p' | sed 's/:.*//'; \
+              | sed -n 's/^\(.*\): \/.*$/\1/p' | sed 's/:.*//'; \
           done | sort -u \
         | while read -r pkg; do dpkg-query -W -f='${Package}\n' "$pkg" 2>/dev/null; done | sort -u); \
     echo "PROTECTED_PKGS: $(printf '%s\n' "$PROTECTED_PKGS" | grep -c .) packages"; \
     echo "$PROTECTED_PKGS"; \
     if [ -n "$PROTECTED_PKGS" ]; then apt-mark manual $PROTECTED_PKGS; fi; \
-    REMOVABLE=$(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc|^g\+\+|^cpp|^make$|^cmake|^binutils|^build-essential|^pkg-config|^libtool|^autoconf|^automake|^dpkg-dev)' || true); \
+    REMOVABLE=$(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc$|^gcc-[0-9]+$|^gcc-[a-z]|^g\+\+$|^g\+\+-[0-9]+$|^g\+\+-[a-z]|^cpp$|^cpp-[0-9]+$|^cpp-[a-z]|^make$|^cmake|^binutils|^build-essential$|^pkg-config|^libtool$|^libtool-bin$|^autoconf|^automake|^autopoint|^intltool|^gettext|^debhelper|^dh-|^dpkg-dev|^libc6-dev$|^linux-libc-dev$)' || true); \
     echo "REMOVABLE (dev/toolchain) count: $(printf '%s\n' "$REMOVABLE" | grep -c .)"; \
-    if [ -n "$REMOVABLE" ]; then apt-mark auto $REMOVABLE; fi; \
+    if [ -n "$REMOVABLE" ]; then \
+        apt-mark auto $REMOVABLE >/dev/null; \
+        apt-get purge -yq --auto-remove $REMOVABLE; \
+    fi; \
     apt-get autoremove -yq --purge; \
     apt-get clean
 
-RUN ! find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null | grep -q "not found" \
-    && echo "OK: all runtime shared libraries present" \
-    || (echo "ERROR: missing shared libraries after shrink" && exit 1)
+RUN MISSING=$(LD_LIBRARY_PATH=/opt/fpp/src find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null | grep "not found" | sort -u | head -20); \
+    if [ -n "$MISSING" ]; then echo "ERROR: missing shared libraries after shrink"; echo "$MISSING"; exit 1; fi; \
+    echo "OK: all runtime shared libraries present"
+
+# ------------------------------------------------------------------
+# Final stage: a clean Debian base carrying only the post-shrink
+# filesystem, so toolchain/dev data never enters the shipped image.
+# ------------------------------------------------------------------
+FROM debian:trixie
+
+COPY --from=build / /
 
 # ------------------------------------------------------------------
 # Add-on entrypoint
