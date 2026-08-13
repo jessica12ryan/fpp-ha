@@ -102,6 +102,30 @@ RUN echo "docker" > /etc/fpp/container
 RUN /opt/fpp/src/fppinit start
 
 # ------------------------------------------------------------------
+# Image shrink: drop the build toolchain and *-dev packages while
+# keeping every shared library FPP needs at runtime.
+# ------------------------------------------------------------------
+# 1. Resolve the runtime .so dependencies of every FPP executable and
+#    map them back to their owning packages; mark those manual so
+#    autoremove cannot touch them.
+# 2. Demote the build toolchain and *-dev packages to auto so they
+#    become eligible for removal.
+# 3. autoremove --purge everything no longer required.
+# 4. Sanity-check that every runtime ELF dependency still resolves.
+RUN PROTECTED=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
+        | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u) && \
+    PROTECTED_PKGS=$(printf '%s\n' "$PROTECTED" | xargs -r dpkg -S 2>/dev/null | cut -d: -f1 | sort -u) && \
+    echo "Protecting runtime packages:" && echo "$PROTECTED_PKGS" && \
+    apt-mark manual $PROTECTED_PKGS && \
+    apt-mark auto $(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc|^g\+\+|^cpp|^make$|^cmake|^binutils|^build-essential|^pkg-config|^libtool|^autoconf|^automake|^dpkg-dev)') && \
+    apt-get autoremove -yq --purge && \
+    apt-get clean
+
+RUN ! find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null | grep -q "not found" \
+    && echo "OK: all runtime shared libraries present" \
+    || (echo "ERROR: missing shared libraries after shrink" && exit 1)
+
+# ------------------------------------------------------------------
 # Add-on entrypoint
 # ------------------------------------------------------------------
 COPY run.sh /run.sh
