@@ -116,8 +116,10 @@ RUN set -e; \
     PROTECTED_PKGS=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
         | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u \
         | while read -r lib; do \
-            dpkg-query -S "$(realpath -m "$lib")" 2>/dev/null | grep -E '^[^ :]+: ' | cut -d: -f1; \
-          done | sort -u); \
+            dpkg-query -S "$(realpath -m "$lib")" 2>/dev/null \
+              | sed -n 's/^\(.*\): \//\1/p' | sed 's/:.*//'; \
+          done | sort -u \
+        | while read -r pkg; do dpkg-query -W -f='${Package}\n' "$pkg" 2>/dev/null; done | sort -u); \
     echo "PROTECTED_PKGS: $(printf '%s\n' "$PROTECTED_PKGS" | grep -c .) packages"; \
     echo "$PROTECTED_PKGS"; \
     if [ -n "$PROTECTED_PKGS" ]; then apt-mark manual $PROTECTED_PKGS; fi; \
