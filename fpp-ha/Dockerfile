@@ -35,6 +35,9 @@ RUN apt-get update && apt-get -yq upgrade
 
 ARG PHPVER="8.4"
 
+# curl is not present in the base image but is needed to fetch FPP_Install.sh
+RUN apt-get update && apt-get install -yq --no-install-recommends curl ca-certificates
+
 # Fetch the exact FPP_Install.sh for the FPP ref being built. It is later run
 # with --skip-apt-install, so we install its package list ourselves below.
 # Pulling it here keeps the dependency set in lockstep with the FPP repo and
