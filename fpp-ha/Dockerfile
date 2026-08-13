@@ -112,14 +112,20 @@ RUN /opt/fpp/src/fppinit start
 #    become eligible for removal.
 # 3. autoremove --purge everything no longer required.
 # 4. Sanity-check that every runtime ELF dependency still resolves.
-RUN PROTECTED=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
-        | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u) && \
-    PROTECTED_PKGS=$(printf '%s\n' "$PROTECTED" | xargs -r dpkg -S 2>/dev/null \
-        | awk -F': ' '/^[^ ]+: \//{print $1}' | sort -u) && \
-    echo "Protecting runtime packages:" && echo "$PROTECTED_PKGS" && \
-    apt-mark manual $PROTECTED_PKGS && \
-    apt-mark auto $(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc|^g\+\+|^cpp|^make$|^cmake|^binutils|^build-essential|^pkg-config|^libtool|^autoconf|^automake|^dpkg-dev)' || true) && \
-    apt-get autoremove -yq --purge && \
+RUN set -e; \
+    PROTECTED=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
+        | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u); \
+    echo "PROTECTED (lib paths) count: $(printf '%s\n' "$PROTECTED" | grep -c .)"; \
+    echo "$PROTECTED" | head -30; \
+    PROTECTED_PKGS=$(printf '%s\n' "$PROTECTED" | xargs -r dpkg-query -S 2>/dev/null \
+        | grep -E '^[a-zA-Z0-9.+:-]+: /' | cut -d: -f1 | sort -u); \
+    echo "PROTECTED_PKGS: $(printf '%s\n' "$PROTECTED_PKGS" | grep -c .) packages"; \
+    echo "$PROTECTED_PKGS"; \
+    if [ -n "$PROTECTED_PKGS" ]; then apt-mark manual $PROTECTED_PKGS; fi; \
+    REMOVABLE=$(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc|^g\+\+|^cpp|^make$|^cmake|^binutils|^build-essential|^pkg-config|^libtool|^autoconf|^automake|^dpkg-dev)' || true); \
+    echo "REMOVABLE (dev/toolchain) count: $(printf '%s\n' "$REMOVABLE" | grep -c .)"; \
+    if [ -n "$REMOVABLE" ]; then apt-mark auto $REMOVABLE; fi; \
+    apt-get autoremove -yq --purge; \
     apt-get clean
 
 RUN ! find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null | grep -q "not found" \
