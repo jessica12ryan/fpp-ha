@@ -10,9 +10,8 @@
 
 [![FPP logo](https://raw.githubusercontent.com/jessica12ryan/fpp-ha/master/fpp-ha/logo.png)](https://github.com/FalconChristmas/fpp/)
 
-FPP-HA currently uses the master branch of FPP which contains the unstable version of FPP 10. Once FPP 10 is released, we will switch to stable builds.
-
-FPP-HA is not officially supported by the FalconChristmas/FPP team. All issues from this installation should be logged to THIS repo. We will test and confirm whether the issue is isolated to our repo, and recreate the ticket on the FPP repo if necessary. The FPP team will not respond to any issues from this installation.
+FPP-HA is not officially supported by the FalconChristmas/FPP team.
+All issues from this installation should be logged to THIS repo.
 
 ---
 
@@ -32,7 +31,7 @@ https://github.com/jessica12ryan/fpp-ha
 
 ## Installation
 
-- The add-on is distributed as a precompiled image, so installation is fast — the image is downloaded and installed in a matter of minutes.
+- After clicking install, it may take a few minutes to download, and install.
 - You can open FPP by browsing to http://HA_IP or clicking the Open Web UI button.
 
 ## More Info
