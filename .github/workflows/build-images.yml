@@ -129,6 +129,8 @@ jobs:
           file: ./${{ env.ADDON_PATH }}/Dockerfile
           platforms: ${{ matrix.platform }}
           push: true
+          build-args: |
+            FPP_REF=${{ needs.prepare.outputs.version }}
           tags: |
             ${{ matrix.image }}:${{ needs.prepare.outputs.version }}
             ${{ matrix.image }}:latest

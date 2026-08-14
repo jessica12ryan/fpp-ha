@@ -4,9 +4,10 @@
 # ----------- Dockerfile ------------
 # -----------------------------------
 # Two-stage build:
-#   stage "build" : compiles FPP on Debian Trixie (branch/tag set in
-#                   config.yaml) and strips the build toolchain + *-dev
-#                   packages that FPP no longer needs at runtime.
+#   stage "build" : compiles FPP on Debian Trixie (FPP git ref set via the
+#                   FPP_REF build arg, passed from the build workflow) and
+#                   strips the build toolchain + *-dev packages that FPP no
+#                   longer needs at runtime.
 #   stage "final" : a clean Debian base that receives the fully-built
 #                   runtime filesystem via COPY, so the removed packages
 #                   never contribute bytes to the shipped image (a plain
@@ -16,14 +17,17 @@
 
 FROM debian:trixie AS build
 
-COPY config.yaml /tmp/config.yaml
+# The FPP git ref (branch or tag) to fetch/build. Passed explicitly from the
+# build workflow (build-args: FPP_REF=...) so the image is always built from
+# the dispatched ref -- never from a stale config.yaml in the build context.
+ARG FPP_REF=master
 
 # ------------------------------------------------------------------
 # APT optimisation & package install
 # ------------------------------------------------------------------
 # The dependency list is not hardcoded here: it is extracted from the exact
-# FPP_Install.sh of the version being built (set in config.yaml), so the
-# packages always match the FPP repo instead of drifting out of sync.
+# FPP_Install.sh of the FPP_REF being built, so the packages always match the
+# FPP repo instead of drifting out of sync.
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
 
@@ -50,7 +54,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends curl ca-certif
 # with --skip-apt-install, so we install its package list ourselves below.
 # Pulling it here keeps the dependency set in lockstep with the FPP repo and
 # doubles as a cache buster for the apt layers whenever the FPP ref changes.
-RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+RUN FPPBRANCH="${FPP_REF}" && \
     curl -sS -o /tmp/FPP_Install.sh "https://raw.githubusercontent.com/FalconChristmas/fpp/${FPPBRANCH}/SD/FPP_Install.sh"
 
 # Extract the base PACKAGE_LIST from FPP_Install.sh, then add the platform
@@ -68,20 +72,21 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg
 RUN apt-get clean
 
 # ------------------------------------------------------------------
-# Clone FPP from the version specified in config.yaml (full depth so git describe works)
+# Clone FPP from the ref specified by the FPP_REF build arg (full depth so
+# git describe works)
 # ------------------------------------------------------------------
 
 # Cache buster: invalidates Docker layers when the FPP remote ref changes.
 # The FPP 10 official release is tracked as a branch, so check heads first,
 # then fall back to tags.
-RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+RUN FPPBRANCH="${FPP_REF}" && \
     STATUS=$(curl -sS -o /tmp/.fpp-ref -w '%{http_code}' "https://api.github.com/repos/FalconChristmas/fpp/git/refs/heads/${FPPBRANCH}") && \
     if [ "$STATUS" != "200" ]; then \
         curl -sS -o /tmp/.fpp-ref "https://api.github.com/repos/FalconChristmas/fpp/git/refs/tags/${FPPBRANCH}"; \
     fi
 
 WORKDIR /opt
-RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+RUN FPPBRANCH="${FPP_REF}" && \
     git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /opt/fpp
 
 # ------------------------------------------------------------------
@@ -92,7 +97,7 @@ RUN FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"'
 # --skip-apt-install : packages already installed above
 # --skip-clone       : repo already cloned above
 RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
-    FPPBRANCH=$(grep '^version:' /tmp/config.yaml | awk '{print $2}' | tr -d '"') && \
+    FPPBRANCH="${FPP_REF}" && \
     yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch ${FPPBRANCH}
 
 # Install nocc (distributed C++ compiler) from FPP's apt repo, which
