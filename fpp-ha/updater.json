@@ -1,9 +1,9 @@
 {
   "github_beta": "false",
-  "last_update": "14-08-2026",
+  "last_update": "21-08-2026",
   "repository": "jessica12ryan/fpp-ha",
   "slug": "fpp-ha",
   "source": "github",
   "upstream_repo": "falconchristmas/fpp",
-  "upstream_version": "v10.0-beta"
+  "upstream_version": "v10.0"
 }
