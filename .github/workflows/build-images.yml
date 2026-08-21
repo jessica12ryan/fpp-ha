@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'FPP version to build (git tag/branch). Defaults to the FPP 10 beta branch.'
+        description: 'FPP version to build (git tag/branch). Defaults to the FPP 10 branch.'
         required: false
-        default: 'v10.0-beta'
+        default: 'v10.0'
         type: string
 
 concurrency:
@@ -34,7 +34,7 @@ jobs:
         run: |
           VERSION="${{ inputs.version }}"
           if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            VERSION="v10.0-beta"
+            VERSION="v10.0"
           fi
           echo "Resolved version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
