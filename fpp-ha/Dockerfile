@@ -163,6 +163,17 @@ COPY --from=build / /
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
+# ------------------------------------------------------------------
+# Avahi: run without a system bus inside the container.  fppd talks to
+# avahi-daemon over its unix socket via libavahi-client; D-Bus is only
+# used by external tools and there is no dbus daemon in this image.
+# Baked at build time because AppArmor permits only reads of
+# /etc/avahi/** at runtime.
+# ------------------------------------------------------------------
+RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=no/' /etc/avahi/avahi-daemon.conf && \
+    grep -q '^enable-dbus=' /etc/avahi/avahi-daemon.conf || \
+    echo 'enable-dbus=no' >> /etc/avahi/avahi-daemon.conf
+
 VOLUME /home/fpp/media
 
 EXPOSE 80 4048/udp 5568/udp 32320/udp 32322 9000/udp 9000/tcp

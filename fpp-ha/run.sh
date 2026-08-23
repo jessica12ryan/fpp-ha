@@ -96,6 +96,8 @@ cleanup() {
         rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
     fi
     [ -n "$APACHE_PID" ] && kill "$APACHE_PID" 2>/dev/null || true
+    # Stop avahi gracefully via its pidfile (pgrep may not be installed)
+    [ -f /run/avahi-daemon/pid ] && kill "$(cat /run/avahi-daemon/pid)" 2>/dev/null || true
     wait 2>/dev/null || true
     echo "[fpp] Shutdown complete" >&2
     exit 0
@@ -105,6 +107,18 @@ trap cleanup SIGTERM SIGINT
 # ------------------------------------------------------------------
 # Start services
 # ------------------------------------------------------------------
+# Avahi (mDNS) daemon - required for FPP network discovery
+# Without it fppd raises Warning 43 ("mDNS/Avahi client failure").
+# --no-drop-root/--no-chroot: the add-on sandbox grants neither SETUID/
+# SETGID nor SYS_CHROOT, which privilege drop + chroot helper require.
+echo "[fpp] Starting avahi-daemon..." >&2
+mkdir -p /run/avahi-daemon
+if /usr/sbin/avahi-daemon --no-drop-root --no-chroot -D >/dev/null 2>&1; then
+    echo "[fpp] avahi-daemon started" >&2
+else
+    echo "[fpp] WARNING: avahi-daemon failed to start (mDNS discovery disabled)" >&2
+fi
+
 echo "[fpp] Starting FPP daemon..." >&2
 /opt/fpp/scripts/fppd_start
 
