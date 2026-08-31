@@ -96,8 +96,9 @@ cleanup() {
         rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
     fi
     [ -n "$APACHE_PID" ] && kill "$APACHE_PID" 2>/dev/null || true
-    # Stop avahi gracefully via its pidfile (pgrep may not be installed)
+    # Stop Avahi and D-Bus (best effort; pidfiles may not exist)
     [ -f /run/avahi-daemon/pid ] && kill "$(cat /run/avahi-daemon/pid)" 2>/dev/null || true
+    [ -f /run/dbus/pid ] && kill "$(cat /run/dbus/pid)" 2>/dev/null || true
     wait 2>/dev/null || true
     echo "[fpp] Shutdown complete" >&2
     exit 0
@@ -107,14 +108,36 @@ trap cleanup SIGTERM SIGINT
 # ------------------------------------------------------------------
 # Start services
 # ------------------------------------------------------------------
+# D-Bus system bus - required for Avahi
+# FPP uses libavahi-client which contacts avahi-daemon via D-Bus;
+# without a system bus the client fails with "Daemon not running"
+# (Warning 43) even if the avahi socket exists.
+echo "[fpp] Starting D-Bus..." >&2
+mkdir -p /run/dbus
+if [ -S /run/dbus/system_bus_socket ]; then
+    echo "[fpp] D-Bus already running" >&2
+elif /usr/bin/dbus-daemon --system --fork 2>&1; then
+    echo "[fpp] D-Bus started" >&2
+    sleep 1
+else
+    echo "[fpp] WARNING: D-Bus failed to start (mDNS discovery may fail)" >&2
+fi
+
 # Avahi (mDNS) daemon - required for FPP network discovery
 # Without it fppd raises Warning 43 ("mDNS/Avahi client failure").
 # --no-drop-root/--no-chroot: the add-on sandbox grants neither SETUID/
 # SETGID nor SYS_CHROOT, which privilege drop + chroot helper require.
 echo "[fpp] Starting avahi-daemon..." >&2
 mkdir -p /run/avahi-daemon
-if /usr/sbin/avahi-daemon --no-drop-root --no-chroot -D >/dev/null 2>&1; then
-    echo "[fpp] avahi-daemon started" >&2
+if [ -S /run/avahi-daemon/socket ]; then
+    echo "[fpp] avahi-daemon already running" >&2
+elif /usr/sbin/avahi-daemon --no-drop-root --no-chroot -D; then
+    sleep 1
+    if [ -S /run/avahi-daemon/socket ]; then
+        echo "[fpp] avahi-daemon started" >&2
+    else
+        echo "[fpp] WARNING: avahi-daemon exited immediately - check for another mDNS stack on UDP 5353" >&2
+    fi
 else
     echo "[fpp] WARNING: avahi-daemon failed to start (mDNS discovery disabled)" >&2
 fi

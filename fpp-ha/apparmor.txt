@@ -129,6 +129,7 @@ profile 006621e4_fpp-ha flags=(attach_disconnected, complain) {
   # ------------------------------------------------------------------
   # System services commonly used by FPP
   # ------------------------------------------------------------------
+  /usr/bin/dbus-daemon              rix,
   /usr/sbin/avahi-daemon          rix,
   /usr/sbin/dnsmasq               rix,
   /usr/sbin/hostapd               rix,
@@ -145,6 +146,8 @@ profile 006621e4_fpp-ha flags=(attach_disconnected, complain) {
   # ------------------------------------------------------------------
   # Service configuration files
   # ------------------------------------------------------------------
+  /etc/dbus-1/**                  r,
+  /usr/share/dbus-1/**            r,
   /etc/avahi/**                   r,
   /etc/dnsmasq.conf               r,
   /etc/hostapd/**                 r,

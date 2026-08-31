@@ -164,15 +164,17 @@ COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
 # ------------------------------------------------------------------
-# Avahi: run without a system bus inside the container.  fppd talks to
-# avahi-daemon over its unix socket via libavahi-client; D-Bus is only
-# used by external tools and there is no dbus daemon in this image.
-# Baked at build time because AppArmor permits only reads of
-# /etc/avahi/** at runtime.
+# Avahi: ensure D-Bus is enabled (default) - FPPs libavahi-client
+# talks to avahi-daemon via D-Bus, so run.sh must start dbus-daemon
+# before avahi-daemon.  Baked here to undo any prior enable-dbus=no
+# and make the requirement explicit.
 # ------------------------------------------------------------------
-RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=no/' /etc/avahi/avahi-daemon.conf && \
+RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=yes/' /etc/avahi/avahi-daemon.conf && \
     grep -q '^enable-dbus=' /etc/avahi/avahi-daemon.conf || \
-    echo 'enable-dbus=no' >> /etc/avahi/avahi-daemon.conf
+    echo 'enable-dbus=yes' >> /etc/avahi/avahi-daemon.conf
+# Ensure the D-Bus daemon binary is present even if avahi pulled
+# only libdbus (dependency alternative allows dbus-broker).
+RUN apt-get update && apt-get install -yq --no-install-recommends dbus && apt-get clean
 
 VOLUME /home/fpp/media
 
