@@ -3,6 +3,7 @@ set -e
 
 # ============================================================
 # FPP - Falcon Player App for Home Assistant
+# NOTE: This file is duplicated in fpp-ha-dev/run.sh — keep in sync
 # ============================================================
 
 # Mark as container so FPP skips hardware-specific checks
@@ -62,7 +63,12 @@ if [ "$PERSISTENCE_NEEDED" = true ] && [ "$BIND_MOUNT_OK" = false ]; then
     (
         while true; do
             sleep "$SYNC_INTERVAL"
-            rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1
+            # Use flock to avoid concurrent rsync --delete races (e.g. with final sync on shutdown)
+            if command -v flock >/dev/null 2>&1; then
+                flock -n /tmp/fpp-rsync.lock rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
+            else
+                rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
+            fi
         done
     ) &
     SYNC_PID=$!
@@ -99,7 +105,12 @@ cleanup() {
     if [ -n "$SYNC_PID" ]; then
         echo "[fpp] Final sync..." >&2
         kill "$SYNC_PID" 2>/dev/null || true
-        rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
+        # Final sync with flock to avoid racing the background loop
+        if command -v flock >/dev/null 2>&1; then
+            flock -w 5 /tmp/fpp-rsync.lock rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
+        else
+            rsync -a --delete /home/fpp/media/ "$PERSISTENT_DIR/" >/dev/null 2>&1 || true
+        fi
     fi
     [ -n "$APACHE_PID" ] && kill "$APACHE_PID" 2>/dev/null || true
     # Stop Avahi and D-Bus (best effort; pidfiles may not exist)

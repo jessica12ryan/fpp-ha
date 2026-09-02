@@ -1,6 +1,6 @@
 name: "FPP - Falcon Player (Dev)"
 description: "Falcon Player (FPP) is a lightweight, optimized, feature-rich sequence player (Dev - always builds master branch locally, not prebuilt)"
-version: "master"
+version: "0.0.0-master"
 slug: "fpp-ha-dev"
 url: "https://github.com/jessica12ryan/fpp-ha"
 stage: "experimental"

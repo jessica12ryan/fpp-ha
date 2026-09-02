@@ -104,8 +104,9 @@ RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
 # Install nocc (distributed C++ compiler) from FPP's apt repo, which
 # FPP_Install.sh just configured above (under --skip-apt-install it
 # defers the actual apt install to us).
+# nocc is optional (distributed compile) — warn but don't fail build if repo unreachable.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq nocc \
-    || echo "WARNING: nocc install skipped (FPP apt repo unreachable)"
+    || { echo "WARNING: nocc install skipped (FPP apt repo unreachable) - distributed compile disabled" >&2; true; }
 
 # ------------------------------------------------------------------
 # Container setup & cleanup
@@ -180,8 +181,13 @@ RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=yes/' /etc/avahi/avahi-daemon.conf 
 # survive the toolchain autoremove — install explicitly in final stage.
 RUN apt-get update && apt-get install -yq --no-install-recommends dbus rsync && apt-get clean && command -v rsync >/dev/null
 
-VOLUME /home/fpp/media
+# VOLUME removed: HA Supervisor provides persistence via map: data -> /home/fpp/media
+# (config.yaml). Declaring VOLUME would create an anonymous volume that can
+# shadow the Supervisor mount on local builds.
 
 EXPOSE 80 4048/udp 5568/udp 32320/udp 32322 9000/udp 9000/tcp
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -fsS http://127.0.0.1/api/fppd/status >/dev/null 2>&1 || curl -fsS http://127.0.0.1/ >/dev/null 2>&1 || exit 1
 
 ENTRYPOINT ["/run.sh"]

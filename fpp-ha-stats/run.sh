@@ -40,9 +40,16 @@ ln -sf "$STORAGE_DIR/processed" /app/statsCollector/processed
 ln -sf /tmp/output/summary.json "$WEBSITE_DIR/summary.json"
 
 # Patch: Force Octokit to run anonymously so it stops using API_KEY as a GitHub token
-if [ -f "/app/server/lib/github.js" ]; then
-    sed -i "s/auth: process.env.API_KEY/auth: undefined/g" /app/server/lib/github.js
-fi
+# Robust: checks multiple possible upstream paths and is idempotent
+for _gh_file in /app/server/lib/github.js /app/server/src/github.js /app/server/lib/github.ts /app/server/src/github.ts; do
+    if [ -f "$_gh_file" ]; then
+        if grep -q "process.env.API_KEY" "$_gh_file" 2>/dev/null; then
+            sed -i "s/auth:[[:space:]]*process\.env\.API_KEY/auth: undefined/g" "$_gh_file" 2>/dev/null || true
+            echo "[fpp-ha-stats] Patched Octokit auth in $_gh_file" >&2
+        fi
+    fi
+done
+unset _gh_file
 
 # Initialize PIDs for cleanup/wait (non-breaking: empty values are ignored)
 SERVER_PID=""

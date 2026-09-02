@@ -1,8 +1,8 @@
-## master (31-08-2026)
+## v0.0.0-master (31-08-2026)
 
 - Dev variant: not prebuilt, always builds FalconChristmas/fpp `master` locally
 
-## 10.0-beta4 (14-08-2026)
+## v10.0-beta4 (14-08-2026)
 
 - Updated app to version 10.0-beta4
 
@@ -10,10 +10,10 @@
 
 - Updated app to version v10.0-beta
 
-## 10.x-master (27-06-2026)
+## v10.x-master (27-06-2026)
 
 - Updated app to version 10.x-master
 
-## master (19-06-2026)
+## v0.0.1-master (19-06-2026)
 
 - First Release
