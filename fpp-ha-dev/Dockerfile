@@ -22,8 +22,7 @@
 # In-app update checker is disabled — updates are managed via Home Assistant
 # (rebuild the add-on to pick up the latest master).
 
-ARG BUILD_FROM=debian:trixie
-FROM $BUILD_FROM AS build
+FROM debian:trixie AS build
 
 # Dev add-on always tracks master - not overridden by workflow.
 ARG FPP_REF=master
@@ -34,8 +33,11 @@ ARG FPP_REF=master
 # The dependency list is not hardcoded here: it is extracted from the exact
 # FPP_Install.sh of the FPP_REF being built, so the packages always match the
 # FPP repo instead of drifting out of sync.
+# NOTE: Hardcoded to debian:trixie (not $BUILD_FROM) — FPP requires Debian
+# toolchain (apt, php). HA Supervisor may inject $BUILD_FROM=ghcr.io/home-assistant/base
+# (Alpine) which would break the apt/dpkg build.
 
-RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
+RUN mkdir -p /etc/dpkg/dpkg.cfg.d && echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
 
 RUN echo '\
     Acquire::http {No-Cache=true;};\
@@ -155,8 +157,7 @@ RUN MISSING=$(LD_LIBRARY_PATH=/opt/fpp/src find /opt/fpp -type f -executable -ex
 # Final stage: a clean Debian base carrying only the post-shrink
 # filesystem, so toolchain/dev data never enters the shipped image.
 # ------------------------------------------------------------------
-ARG BUILD_FROM=debian:trixie
-FROM $BUILD_FROM
+FROM debian:trixie
 
 COPY --from=build / /
 

@@ -29,7 +29,7 @@ ARG FPP_REF=master
 # FPP_Install.sh of the FPP_REF being built, so the packages always match the
 # FPP repo instead of drifting out of sync.
 
-RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
+RUN mkdir -p /etc/dpkg/dpkg.cfg.d && echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
 
 RUN echo '\
     Acquire::http {No-Cache=true;};\
