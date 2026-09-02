@@ -13,11 +13,14 @@ startup: "services"
 boot: "auto"
 
 hostname: "fpp-docker"
-host_network: true
-host_ipc: true
+host_network: true  # required for DDP/sACN multicast, mDNS, E1.31; non-breaking: FPP binds to host interfaces
+host_ipc: true      # ALSA/PipeWire shared memory
 
-apparmor: true
+apparmor: true      # see apparmor.txt (complain mode intentional, see note there)
 
+# Privileged caps are minimal set for FPP hardware + network; each is
+# required for production (GPIO/SPI/I2C, real-time audio, mount fallback).
+# Do not remove without validating on target SBC hardware.
 privileged:
   - SYS_ADMIN         # mount (bind mount persistence), GPIO
   - SYS_RAWIO         # /dev/mem, GPIO, I2C, SPI

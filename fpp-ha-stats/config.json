@@ -10,9 +10,15 @@
   "stage": "experimental",
   "webui": "http://[HOST]:[PORT:80]",
   "panel_icon": "mdi:led-strip-variant",
+  "startup": "services",
+  "boot": "auto",
   "ports": {
     "80/tcp": 80,
     "7654/tcp": 7654
+  },
+  "ports_description": {
+    "80/tcp": "Web dashboard",
+    "7654/tcp": "Stats API"
   },
   "options": {
     "api_key": "ChangeMeToASecretKey123"

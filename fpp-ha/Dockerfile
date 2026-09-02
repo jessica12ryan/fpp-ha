@@ -61,6 +61,7 @@ RUN FPPBRANCH="${FPP_REF}" && \
 # extras the script installs on a Debian host (libva-dev smartmontools
 # chrony pipewire). The PHP version is injected from the ARG above.
 RUN PACKAGE_LIST=$(awk '/^[[:space:]]*PACKAGE_LIST="/{sub(/^[[:space:]]*PACKAGE_LIST="/,"");gsub(/\\/,"");buf=$0;inlist=1;next} inlist{gsub(/\\/,"");buf=buf " " $0} inlist&&/"$/{sub(/"$/,"",buf);print buf;exit}' /tmp/FPP_Install.sh) && \
+    test -n "$PACKAGE_LIST" || { echo "ERROR: failed to extract PACKAGE_LIST from FPP_Install.sh" >&2; exit 1; } && \
     PACKAGE_LIST="${PACKAGE_LIST} libva-dev smartmontools chrony pipewire" && \
     PACKAGE_LIST=$(printf '%s' "$PACKAGE_LIST" | sed "s/\${PHPVER}/${PHPVER}/g") && \
     apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $PACKAGE_LIST
@@ -87,7 +88,7 @@ RUN FPPBRANCH="${FPP_REF}" && \
 
 WORKDIR /opt
 RUN FPPBRANCH="${FPP_REF}" && \
-    git clone --branch ${FPPBRANCH} https://github.com/FalconChristmas/fpp.git /opt/fpp
+    git clone --branch "${FPPBRANCH}" https://github.com/FalconChristmas/fpp.git /opt/fpp
 
 # ------------------------------------------------------------------
 # Build FPP using the official install script
@@ -98,7 +99,7 @@ RUN FPPBRANCH="${FPP_REF}" && \
 # --skip-clone       : repo already cloned above
 RUN cp /opt/fpp/SD/FPP_Install.sh /root/FPP_Install.sh && \
     FPPBRANCH="${FPP_REF}" && \
-    yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch ${FPPBRANCH}
+    yes | bash /opt/fpp/SD/FPP_Install.sh --skip-apt-install --skip-clone --branch "${FPPBRANCH}"
 
 # Install nocc (distributed C++ compiler) from FPP's apt repo, which
 # FPP_Install.sh just configured above (under --skip-apt-install it

@@ -13,6 +13,10 @@
 
 #include <tunables/global>
 
+# NOTE: complain mode is intentional for production — FPP touches diverse
+# hardware (GPIO, USB, audio, raw sockets). Switch to enforce only after
+# validating on target hardware; otherwise legitimate FPP operations get
+# denied without log visibility. See SECURITY.md.
 profile 006621e4_fpp-ha flags=(attach_disconnected, complain) {
   #include <abstractions/base>
   #include <abstractions/nameservice>

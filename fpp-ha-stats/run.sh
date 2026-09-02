@@ -44,27 +44,48 @@ if [ -f "/app/server/lib/github.js" ]; then
     sed -i "s/auth: process.env.API_KEY/auth: undefined/g" /app/server/lib/github.js
 fi
 
+# Initialize PIDs for cleanup/wait (non-breaking: empty values are ignored)
+SERVER_PID=""
+HTTP_PID=""
+COLLECTOR_LOOP_PID=""
+
 # 1. Start the main API Web Server engine (Runs continuously on port 7654)
-echo "Launching Statistics Web API Server Engine..."
-cd /app/server
-OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
-SERVER_PID=$!
+echo "Launching Statistics Web API Server Engine..." >&2
+if ! cd /app/server 2>&1; then
+    echo "[fpp-ha-stats] ERROR: /app/server not found" >&2
+else
+    OUTPUT_DIR="/tmp/output" FPP_STATS_MODE=server node index.js &
+    SERVER_PID=$!
+    echo "[fpp-ha-stats] Server PID $SERVER_PID" >&2
+fi
 
 # 2. Move to the website asset folder and serve it internally on port 80
-echo "Launching Statistics Web Frontend Interface Dashboard..."
-cd "$WEBSITE_DIR"
-http-server -p 80 &
-HTTP_PID=$!
+echo "Launching Statistics Web Frontend Interface Dashboard..." >&2
+if ! cd "$WEBSITE_DIR" 2>&1; then
+    echo "[fpp-ha-stats] ERROR: $WEBSITE_DIR not found" >&2
+else
+    http-server -p 80 &
+    HTTP_PID=$!
+    echo "[fpp-ha-stats] Frontend PID $HTTP_PID" >&2
+fi
 
 # 3. Dynamic background loop targeting the true statsCollector package
+# Non-breaking: resilient to transient node failures; never exit collector loop
 (
     # Give the primary server 5 seconds to warm up first
     sleep 5
     while true; do
-        echo "[Collector Loop] Running data aggregation pass in statsCollector folder..."
-        cd /app/statsCollector
-        OUTPUT_DIR="/tmp/output" node index.js
-        echo "[Collector Loop] Aggregation pass finished. Sleeping for 5 minutes..."
+        echo "[Collector Loop] Running data aggregation pass in statsCollector folder..." >&2
+        if ! cd /app/statsCollector 2>&1; then
+            echo "[Collector Loop] WARNING: /app/statsCollector missing, retrying in 60s" >&2
+            sleep 60
+            continue
+        fi
+        if ! OUTPUT_DIR="/tmp/output" node index.js 2>&1; then
+            echo "[Collector Loop] WARNING: aggregation pass failed (exit $?), retrying after sleep" >&2
+        else
+            echo "[Collector Loop] Aggregation pass finished. Sleeping for 5 minutes..." >&2
+        fi
         sleep 300
     done
 ) &
