@@ -1,4 +1,4 @@
-FROM alpine:3.22
+FROM alpine:3.24
 
 # Install baseline application environments, git, and a global static file server
 # curl is added for HEALTHCHECK (lightweight, no extra daemon)
