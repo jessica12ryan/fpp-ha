@@ -4,9 +4,11 @@
 
 Only the latest version of FPP-HA is supported with security updates.
 
-| Version | Supported |
-| ------- | --------- |
-| master  | ✅ Yes    |
+| Version | Supported          |
+| ------- | ------------------ |
+| v10.0   | ✅ Yes (stable)   |
+| master  | ✅ Yes (dev)      |
+| 1.0.0   | ✅ Yes (stats)    |
 
 ## Reporting a Vulnerability
 

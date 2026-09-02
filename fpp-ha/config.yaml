@@ -8,7 +8,7 @@ url: "https://github.com/jessica12ryan/fpp-ha"
 arch:
   - amd64
   - aarch64
-  
+
 startup: "services"
 boot: "auto"
 
