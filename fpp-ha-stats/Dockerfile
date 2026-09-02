@@ -1,4 +1,4 @@
-FROM alpine:3.22
+FROM alpine:3.24
 
 # Install baseline application environments, git, and a global static file server
 RUN apk add --no-cache git nodejs npm bash && \
