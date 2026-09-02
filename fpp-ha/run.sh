@@ -82,8 +82,14 @@ sed -i 's/^HostDescription = .*/HostDescription = "Home Assistant FPP"/' /home/f
 # Fix permissions for web UI write access
 # ------------------------------------------------------------------
 # fppinit sets ownership to fpp:fpp, but PHP-FPM may run as www-data.
-echo "[fpp] Setting permissions..."
-chmod -R a+rwX /home/fpp/media/ 2>&1
+# Prefer group permissions over world-writable; fall back to a+rwX only if needed.
+echo "[fpp] Setting permissions..." >&2
+chown -R fpp:www-data /home/fpp/media 2>/dev/null || chown -R fpp:fpp /home/fpp/media 2>/dev/null || true
+if ! chmod -R g+rwX /home/fpp/media 2>&1; then
+    chmod -R a+rwX /home/fpp/media 2>&1 || true
+fi
+# Best effort: ensure www-data can write via group membership for new files
+usermod -a -G fpp www-data 2>/dev/null || usermod -aG fpp www-data 2>/dev/null || true
 
 # ------------------------------------------------------------------
 # Signal handling

@@ -5,14 +5,21 @@ STORAGE_DIR="/data/storage"
 WEBSITE_DIR="/app/website"
 
 # Read the API Key value out of the Home Assistant Configuration options
+# Non-breaking: keep default for existing installs but warn loudly.
+API_KEY=""
 if [ -f "/data/options.json" ]; then
-    export API_KEY=$(node -e "cl=require('/data/options.json'); console.log(cl.api_key)" 2>/dev/null || cat /data/options.json | grep -o '"api_key": "[^"]*' | grep -o '[^"]*$')
+    API_KEY=$(node -e "try{cl=require('/data/options.json'); process.stdout.write(cl.api_key||'')}catch(e){}" 2>/dev/null)
+    if [ -z "$API_KEY" ]; then
+        API_KEY=$(grep -o '"api_key"[[:space:]]*:[[:space:]]*"[^"]*"' /data/options.json 2>/dev/null | sed -E 's/.*"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' | head -n 1)
+    fi
 fi
 
 # Fallback default key if parsing failed or file doesn't exist yet
 if [ -z "$API_KEY" ]; then
-    export API_KEY="ChangeMeToASecretKey123"
+    API_KEY="ChangeMeToASecretKey123"
+    echo "[fpp-ha-stats] WARNING: Using default api_key - set a unique api_key in add-on Configuration!" >&2
 fi
+export API_KEY
 
 # Create the missing directories that the upstream app demands
 mkdir -p /tmp/output

@@ -174,7 +174,9 @@ RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=yes/' /etc/avahi/avahi-daemon.conf 
     echo 'enable-dbus=yes' >> /etc/avahi/avahi-daemon.conf
 # Ensure the D-Bus daemon binary is present even if avahi pulled
 # only libdbus (dependency alternative allows dbus-broker).
-RUN apt-get update && apt-get install -yq --no-install-recommends dbus && apt-get clean
+# rsync is required by run.sh fallback persistence (rsync loop) and must
+# survive the toolchain autoremove — install explicitly in final stage.
+RUN apt-get update && apt-get install -yq --no-install-recommends dbus rsync && apt-get clean && command -v rsync >/dev/null
 
 VOLUME /home/fpp/media
 
