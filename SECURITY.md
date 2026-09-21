@@ -12,13 +12,12 @@ Only the latest version of FPP-HA is supported with security updates.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in FPP-HA, please report it privately by opening a security advisory at:
+If you discover a security issue in this repo, please open a private issue or
+contact the maintainer via the GitHub repository at
+https://github.com/jessica12ryan/fpp-haCommands/security/advisories
 
-https://github.com/jessica12ryan/fpp-ha/security/advisories/new
-
-Please do **not** disclose the vulnerability publicly until we have had a chance to address it.
-
-We will acknowledge receipt within 48 hours and provide an estimated timeline for a fix.
+Please do **not** report security issues through the public issue tracker if they
+could be exploited before a fix is released.
 
 ## Scope
 
