@@ -1,3 +1,7 @@
+## v10.2 (03-10-2026)
+
+- Updated app to version v10.2
+
 ## v10.1 (15-09-2026)
 
 - Updated app to version v10.1
