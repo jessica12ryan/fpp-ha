@@ -11,14 +11,13 @@
 #   a publish workflow (unlike fpp-ha which is built/pushed for
 #   each version tag).
 # Two-stage build:
-#   stage "build" : compiles FPP on Debian Trixie (FPP git ref is
-#                   always `master`) and strips the build toolchain
-#                   + *-dev packages that FPP no longer needs at runtime.
+#   stage "build" : compiles FPP on Debian Trixie (FPP git ref is always
+#                   `master`) and retains the full dependency set installed
+#                   by FPP_Install.sh — including all *-dev packages and the
+#                   build toolchain, which FPP needs at runtime and which we
+#                   cannot modify.
 #   stage "final" : a clean Debian base that receives the fully-built
-#                   runtime filesystem via COPY, so the removed packages
-#                   never contribute bytes to the shipped image (a plain
-#                   single-stage apt purge would leave their data in
-#                   lower layers and not shrink the image).
+#                   runtime filesystem via COPY.
 # In-app update checker is disabled — updates are managed via Home Assistant
 # (rebuild the add-on to pick up the latest master).
 
@@ -119,43 +118,20 @@ RUN echo "docker" > /etc/fpp/container
 RUN /opt/fpp/src/fppinit start
 
 # ------------------------------------------------------------------
-# Image shrink: drop the build toolchain and *-dev packages while
-# keeping every shared library FPP needs at runtime.
+# Dependency retention: FPP needs its full dependency set at runtime,
+# including every *-dev package and the build toolchain. Do NOT purge
+# any installed packages — only drop apt metadata to save space.
 # ------------------------------------------------------------------
-# 1. Resolve the runtime .so dependencies of every FPP executable and
-#    map them back to their owning packages; mark those manual so
-#    autoremove cannot touch them.
-# 2. Demote the build toolchain and *-dev packages to auto so they
-#    become eligible for removal.
-# 3. autoremove --purge everything no longer required.
-# 4. Sanity-check that every runtime ELF dependency still resolves.
-RUN set -e; \
-    PROTECTED_PKGS=$(find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null \
-        | awk '/=>/ { print $3 } { print $1 }' | grep '^/' | sort -u \
-        | while read -r lib; do \
-            dpkg-query -S "$(realpath -m "$lib")" 2>/dev/null \
-              | sed -n 's/^\(.*\): \/.*$/\1/p' | sed 's/:.*//'; \
-          done | sort -u \
-        | while read -r pkg; do dpkg-query -W -f='${Package}\n' "$pkg" 2>/dev/null; done | sort -u); \
-    echo "PROTECTED_PKGS: $(printf '%s\n' "$PROTECTED_PKGS" | grep -c .) packages"; \
-    echo "$PROTECTED_PKGS"; \
-    if [ -n "$PROTECTED_PKGS" ]; then apt-mark manual $PROTECTED_PKGS; fi; \
-    REMOVABLE=$(dpkg-query -W -f='${Package}\n' | grep -E -- '(-dev$|^gcc$|^gcc-[0-9]+$|^gcc-[a-z]|^g\+\+$|^g\+\+-[0-9]+$|^g\+\+-[a-z]|^cpp$|^cpp-[0-9]+$|^cpp-[a-z]|^make$|^cmake|^binutils|^build-essential$|^pkg-config|^libtool$|^libtool-bin$|^autoconf|^automake|^autopoint|^intltool|^gettext|^debhelper|^dh-|^dpkg-dev|^libc6-dev$|^linux-libc-dev$)' || true); \
-    echo "REMOVABLE (dev/toolchain) count: $(printf '%s\n' "$REMOVABLE" | grep -c .)"; \
-    if [ -n "$REMOVABLE" ]; then \
-        apt-mark auto $REMOVABLE >/dev/null; \
-        apt-get purge -yq --auto-remove $REMOVABLE; \
-    fi; \
-    apt-get autoremove -yq --purge; \
-    apt-get clean
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Sanity-check that every runtime ELF dependency still resolves.
 RUN MISSING=$(LD_LIBRARY_PATH=/opt/fpp/src find /opt/fpp -type f -executable -exec ldd {} \; 2>/dev/null | grep "not found" | sort -u | head -20); \
-    if [ -n "$MISSING" ]; then echo "ERROR: missing shared libraries after shrink"; echo "$MISSING"; exit 1; fi; \
+    if [ -n "$MISSING" ]; then echo "ERROR: missing runtime shared libraries"; echo "$MISSING"; exit 1; fi; \
     echo "OK: all runtime shared libraries present"
 
 # ------------------------------------------------------------------
-# Final stage: a clean Debian base carrying only the post-shrink
-# filesystem, so toolchain/dev data never enters the shipped image.
+# Final stage: a clean Debian base carrying the built FPP filesystem
+# (including the full dev/toolchain dependency set).
 # ------------------------------------------------------------------
 FROM debian:trixie
 
@@ -178,8 +154,8 @@ RUN sed -i 's/^#\?enable-dbus=.*/enable-dbus=yes/' /etc/avahi/avahi-daemon.conf 
     echo 'enable-dbus=yes' >> /etc/avahi/avahi-daemon.conf
 # Ensure the D-Bus daemon binary is present even if avahi pulled
 # only libdbus (dependency alternative allows dbus-broker).
-# rsync is required by run.sh fallback persistence (rsync loop) and must
-# survive the toolchain autoremove — install explicitly in final stage.
+# rsync is required by run.sh fallback persistence (rsync loop) —
+# install explicitly in final stage.
 RUN apt-get update && apt-get install -yq --no-install-recommends dbus rsync && apt-get clean && command -v rsync >/dev/null
 
 # VOLUME removed: HA Supervisor provides persistence via map: data -> /home/fpp/media
