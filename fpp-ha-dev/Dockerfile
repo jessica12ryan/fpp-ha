@@ -5,7 +5,8 @@
 # -----------------------------------
 # Dev variant: fpp-ha-dev
 # - NOT prebuilt: no `image` in config.yaml, built locally on the
-#   Home Assistant host via build.yaml + this Dockerfile.
+#   Home Assistant host directly from this Dockerfile (the deprecated
+#   build.yaml has been removed; build parameters live here).
 # - ALWAYS builds the `master` branch of FalconChristmas/fpp;
 #   FPP_REF is hardcoded to `master` and is not parameterized by
 #   a publish workflow (unlike fpp-ha which is built/pushed for
@@ -21,6 +22,15 @@
 # In-app update checker is disabled — updates are managed via Home Assistant
 # (rebuild the add-on to pick up the latest master).
 
+# ------------------------------------------------------------------
+# Build parameters (formerly in the deprecated build.yaml)
+# ------------------------------------------------------------------
+# build_from: debian:trixie for both amd64 and aarch64 — declared directly
+# in the FROM lines below instead of a build.yaml. A fixed FROM is used
+# deliberately rather than ${BUILD_FROM}: FPP needs the Debian toolchain
+# (apt, PHP), and an injected BUILD_FROM (e.g. the Alpine-based
+# ghcr.io/home-assistant/base) would break the apt/dpkg build. Since
+# Supervisor 2026.04.0 BUILD_FROM is no longer passed by default anyway.
 FROM debian:trixie AS build
 
 # Dev add-on always tracks master - not overridden by workflow.
@@ -32,9 +42,6 @@ ARG FPP_REF=master
 # The dependency list is not hardcoded here: it is extracted from the exact
 # FPP_Install.sh of the FPP_REF being built, so the packages always match the
 # FPP repo instead of drifting out of sync.
-# NOTE: Hardcoded to debian:trixie (not $BUILD_FROM) — FPP requires Debian
-# toolchain (apt, php). HA Supervisor may inject $BUILD_FROM=ghcr.io/home-assistant/base
-# (Alpine) which would break the apt/dpkg build.
 
 RUN mkdir -p /etc/dpkg/dpkg.cfg.d && echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup
 

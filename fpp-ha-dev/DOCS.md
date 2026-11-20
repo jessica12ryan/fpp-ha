@@ -32,7 +32,7 @@ Then install **FPP - Falcon Player (Dev)** (`fpp-ha-dev`) from Settings > Apps.
 
 | Feature | `fpp-ha` (stable) | `fpp-ha-dev` (this) |
 |---|---|---|
-| Image | Prebuilt GHCR `ghcr.io/jessica12ryan/{arch}-addon-fpp-ha` | Locally built (`build.yaml` + `Dockerfile`) |
+| Image | Prebuilt GHCR `ghcr.io/jessica12ryan/{arch}-addon-fpp-ha` | Locally built (`Dockerfile`, base image `debian:trixie`) |
 | FPP ref | Tagged version (`v10.0`, etc. via workflow) | Always `master` |
 | Build time | Fast (pull) | Slow (compile) |
 | Updates | Via add-on version bump | Rebuild add-on to get latest master |
